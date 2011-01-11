@@ -2,30 +2,30 @@
 
 var Model = Class.create({
 	'initialize': function (doc, api_loaded) {
-		if (!this.hasOwnProperty('__proto__')) {
-			this.__proto__ = this.constructor.prototype;
-		}
-
 		doc = doc || {};
-
-		this._exists = (api_loaded || doc._id !== undefined);
-		this._api_loaded = api_loaded;
-		this.doc = {};
-
-		var fields = this.fields;
-		for (var i = 0, ii = fields; i < ii; ++i) {
-			this[fields[i]] = null;
-			this.doc[fields[i]] = null;
+		
+		if (!doc._ns && !this.no_namespace) {
+			doc._ns = null;
 		}
-
+		this._api_loaded = !!api_loaded;
+		this._exists = !!api_loaded || !!doc._id;
+		if (!this._exists) {
+			doc._id = null;
+		}
+		this.doc = {};
 		for (var key in doc) {
 			if (doc.hasOwnProperty(key)) {
-				if (key.search(':') > -1 || key.search('__') > -1 || key[0] == '_') {
-					this.doc[key.replace('__', ':')] = doc[key];
-				}
-				if (key[0] != '_') {
+				this.doc[key.replace('__', ':')] = doc[key];
+				if (key.search('__') > -1 || key.search(':') > -1) {
 					this[key.replace('__', ':')] = doc[key];
 				}
+			}
+		}
+		var fields = this.fields;
+		for (var f = 0, ff = fields.length; f < ff; ++f) {
+			var field = fields[f];
+			if (doc[field] === undefined) {
+				doc[field] = null;
 			}
 		}
 	},
@@ -33,127 +33,115 @@ var Model = Class.create({
 	'exists': function () {
 		return this._exists;
 	},
+	'isValid': function () {
+		var rules, r, rr, key;
+		var errors = {};
 
-	'getId': function () {
-		return this.exists() ? this.doc._id : null;
+		rules = this.constructor.prototype.validates_presence_of || [];
+		for (r = 0, rr = rules.length; r < rr; ++r) {
+			key = rules[r];
+			if (!this[key]) {
+				if (typeof errors[key] === undefined) {
+					errors[key] = [];
+				}
+				errors[key].push('presence');
+			}
+		}
+
+		rules = this.constructor.prototype.validates_format_of || {};
+		for (key in rules) {
+			if (rules.hasOwnProperty(key) && !rules[key].test(this[key])) {
+				if (typeof errors[key] === undefined) {
+					errors[key] = [];
+				}
+				errors[key].push('format');
+			}
+		}
+
+		var errors_json = Object.toJSON(errors);
+		if (errors_json == '{}') {
+			this.errors = errors;
+		}
+		return (errors_json == '{}');
 	},
 
+	'getId': function () {
+		if (!this.doc._id) {
+			throw 'Invalid state: Document not saved';
+		}
+		return this.doc._id;
+	},
 	'setId': function (id) {
 		this.doc._id = id;
 	},
 
-	'getFields': function (keys) {
-		var output = {};
-
-		var fields = keys || this.fields;
-		for (var i = 0, ii = fields.length; i < ii; ++i) {
-			var key = fields[i],
-				default_value = null;
-			if (key instanceof Array) {
-				default_value = key[1];
-				key = key[0];
-			}
-			if (key.search(':') == -1) {
-				throw 'Invalid field name "' + key + '"';
-			}
-
-			output[key] = (this[key] !== undefined) ? this[key] : default_value;
-		}
-
-		return output;
+	'setNS': function (ns) {
+		this.doc._ns = ns;
 	},
 
-	'giveTo': function (obj, key) {
-		/*if (obj === undefined || obj.doc === undefined || key === undefined) {
-			throw 'Invalid state';
-		}
-		if (!obj.exists()) {
-			throw 'The document has not been saved yet.';
-		}*/
-
-		this.doc[key] = obj.getId();
-		
-		return this;
+	'set': function (key, obj) {
+		this.doc[key] = obj.doc ? obj.getId() : obj;
 	},
-
-	'get': function (key, type, selector, options, callback) {
-		if (arguments[4] === undefined) {
-			if (typeof arguments[3] == 'function') {
-				callback = arguments[3];
-				options = {};
-			}
-		}
-		if (arguments[3] === undefined) {
-			if (typeof arguments[2] == 'function') {
-				callback = arguments[2];
-				options = {};
-				selector = {};
-			}
-		}
-/*
-		A[id]
-		B[id, owner]
-
-		a = { _id: owner }
-		b = { owner: id }
-*/
-		var owner_id = this.getId();
-		if (owner_id === null) {
-			throw 'The parent document has not been saved yet (when trying to get its sub documents under the key "' + key + '"").';
-		}
-		selector.owner = owner_id;
-		if (this.fields.indexOf('date:deleted') > -1) {
-			selector.date__deleted = { $exists: false };
-		}
-
-		if (!this._api_loaded) {
-			type.all(selector, options, callback);
+	'add': function (key, obj) {
+		if (this.doc[key] === undefined || this.doc[key] instanceof Array !== true) {
+			this.doc[key] = [obj.doc ? obj.getId() : obj];
 		} else {
-			var docs = this[key] || [],
-				children = [];
-			for (var i = 0, ii = docs.length; i < ii; ++i) {
-				children.push(new type(docs[i], true));
-			}
-			callback(children);
+			this.doc[key].push(obj.doc ? obj.getId() : obj);
 		}
 	},
 
-	'getParent': function (key, type, selector, options, callback) {
-		if (arguments[4] === undefined) {
-			if (typeof arguments[3] == 'function') {
-				callback = arguments[3];
-				options = {};
-			}
-		}
-		if (arguments[3] === undefined) {
-			if (typeof arguments[2] == 'function') {
-				callback = arguments[2];
-				options = {};
-				selector = {};
-			}
+	'get': function (key, type, options, callback) {
+		if (arguments.length === 3) {
+			callback = options;
+			options = {};
 		}
 
-		if (this._api_loaded && typeof this[key] == 'object') {			
-			callback(new type(this[key], true));
-			return;
+		var assoc_ids = this.doc[key];
+		if (assoc_ids instanceof Array) {
+			if (assoc_ids.length === 0) {
+				callback([]);
+			} else if (typeof assoc_ids[0] == 'object') {
+				var docs = [];
+				for (var i = 0, ii = assoc_ids.length; i < ii; ++i) {
+					docs.push(new type(assoc_ids, this._api_loaded));
+				}
+				callback(docs);
+			} else {
+				type.all({ _id: { $in: assoc_ids } }, options, callback);
+			}
+		} else if (typeof assoc_ids == 'object') {
+			callback([new type(assoc_ids, this._api_loaded)]);
+		} else if (typeof assoc_ids == 'string') {
+			type.all({ _id: assoc_ids }, options, callback);
+		} else {
+			var selector = {};
+			selector[key] = this.getId();
+			type.all(selector, options, callback);
 		}
-		
-		selector._id = this.doc[key];
-		options.one = true;
-		
-		type.one(selector, options, callback);
+	},
+	'getOne': function (key, type, options, callback) {
+		if (arguments.length === 3) {
+			callback = options;
+			options = {};
+		}
+		if (!options) {
+			options = {};
+		}
+
+		options._one = true;
+		this.get(key, type, options, callback);
 	},
 
 	'save': function (callback) {
 		for (var key in this) {
-			if (this.hasOwnProperty(key) && (key.search(':') > -1 || key[0] == '_')) {
+			if (this.hasOwnProperty(key) && key.search(':') > -1) {
 				this.doc[key] = this[key];
 			}
 		}
 
 		var sql = Model._getSQL(
 			this.exists() ? 'update' : 'insert',
-			this.collection_name,
+			this.collection,
 			this.exists() ? { _id: this.getId() } : null,
 			this.doc
 		);
@@ -193,7 +181,7 @@ var Model = Class.create({
 			this['date:deleted'] = Math.round(new Data().getTime() / 1000);
 			this.save(callback);
 		} else if (this.exists()) {
-			var sql = Model._getSQL('delete', this.collection_name, { _id: this.getId() });
+			var sql = Model._getSQL('delete', this.collection, { _id: this.getId() });
 
 			var fn_success = function (tx, result) {
 				callback();
@@ -218,120 +206,147 @@ var Model = Class.create({
 });
 
 Model.one = function (selector, options, callback) {	
-	if (arguments[2] === undefined) {
-		if (typeof arguments[1] == 'function') {
-			callback = arguments[1];
-			options = {};
-		}
-	}
-	if (options instanceof Array) {
-		options = {
-			'fields': options
-		};
-	}
-	if (typeof selector == 'string') {
-		selector = {
-			_id: selector
-		};
+	if (arguments.length === 2) {
+		callback = options;
+		options = {};		
+	} else if (arguments.length === 1) {
+		callback = selector;
+		selector = {};
+		options = {};		
 	}
 
-	options.one = true;
-
+	options._one = true;
 	this.all(selector, options, callback);
 };
 
 Model.all = function (selector, options, callback) {
-	if (arguments[2] === undefined) {
-		if (typeof arguments[1] == 'function') {
-			callback = arguments[1];
-			options = {};
-		}
+	if (arguments.length === 2) {
+		callback = options;
+		options = {};
+	} else if (arguments.length === 1) {
+		callback = selector;
+		selector = {};
+		options = {};
 	}
-	if (options instanceof Array) {
-		options = {
-			'fields': options
-		};
+
+	var online = (options.online || app.MODE == 'online');
+	if (online && !options.fallback) {
+		throw 'Invalid state: No fallback URI specified.';
 	}
-	
-	var one = !!options.one;
-	if (one) {
-		delete options.one;
-	}
-	if (options.sort === undefined) {
-		options.sort = 'date:created';
-	}
-	
-	var sql = this._getSQL('select', this.collection_name, selector, options);
 
 	var fallback = function () {
-		if (!options.fallback) {
-			callback(one ? new this() : []);
-			return;
-		}
-
 		this.api(options.fallback, function (status, response) {
 			if (response instanceof Array) {
 				var docs = [];
 				for (var i = 0, ii = response.length; i < ii; ++i) {
 					docs.push(new this(response[i], true));
 				}
-				callback(one ? (docs[0] || new this()) : docs);
+				callback(options._one ? (docs[0] || new this()) : docs);
 			} else {
 				var doc = new this(response, true);
-				callback(one ? doc : [doc]);
+				callback(options._one ? doc : [doc]);
 			}
 		}.bind(this));
 	}.bind(this);
 
-	var fn_success = function (tx, result) {
-		var rows = result.rows,
-			docs = [],
-			i, ii = rows.length;		
-		if (ii > 0) {
-			for (i = 0; i < ii; ++i) {
-				docs.push(new this(rows.item(i)));
-				if (one) {
-					break;
-				}
-			}
-		} else {
-			fallback();
-			return;
-		}
-
-		callback(one ? (docs[0] || new this()) : docs);
-	}.bind(this);
-	var fn_error = function (tx, error) {
-		throw Error('Select operation failed: ' + error.message);
-	};
-	var execute_query = function (sql, params) {
-		try {
-			this.transaction.executeSql(sql, params, fn_success, fn_error);
-		} catch (exc) {
-			// old transaction used (DOM Invalid State Exception 11)
-			// try with a new transaction
-			app.db.transaction(function (tx) {
-				this.transaction = tx;
-				execute_query(sql, params);
-			}.bind(this));
-			// kind of a messy solution; should be improved eventually
-		}
-	}.bind(this);
-	
-	if (app.MODE == 'online' || options.online) {
+	if (online) {
 		fallback();
 		return;
 	}
 
-	if (!this.transaction) {
-		app.db.transaction(function (tx) {
-			this.transaction = tx;
-			execute_query(sql[0], sql[1]);
-		}.bind(this));
+	// begin OFFLINE MODE
+
+	var sql = this._getSQL('select', this.collection, selector, options);
+	/*var sql = "SELECT * FROM [" + this.collection + "] ";
+	var params = [];
+	if (selector && Object.toJSON(selector) != '{}') {		
+		sql += "WHERE " + mongo2sql(selector, true) + " ";
+		params = params.concat(mongo2sql_params(selector));
+	}
+	if (options._one) {
+		sql += "LIMIT 1";
+	}*/
+
+	var transaction;
+	var execute = function () {
+		transaction.executeSql(sql[0], sql[1], function (tx, results) {
+			var docs = [];
+			var rows = results.rows;
+			for (var r = 0, rr = rows.length; r < rr; ++r) {
+				docs.push(new this(rows.item(r)));
+			}
+			callback(options._one ? docs.first() || new this() : docs);
+		}.bind(this), function (tx, error) {
+			console.error('SQLERROR: ' + error.message + '; ' + JSON.stringify(error));			
+		});
+	}.bind(this);
+	if (options.transaction) {
+		transaction = options.transaction;
+		try {
+			execute();
+		} catch (exc) {
+			app.db.transaction(function (tx) {
+				transaction = tx;
+				execute();
+			});
+		}
 	} else {
-		execute_query(sql[0], sql[1]);
+		app.db.transaction(function (tx) {
+			transaction = tx;
+			execute();
+		});
 	}
 };
+
+Model.api = function (uri, params, callback) {
+	if (typeof arguments[1] == 'function') {
+		callback = arguments[1];
+		params = {};
+	}
+
+	var api_root = app._cfg.api_root;
+
+	var qs = null;
+	if (Object.toJSON(params) != '{}') {
+		var e = [];
+		for (var key in params) {
+			if (params.hasOwnProperty(key)) {
+				e.push(key + '=' + encodeURIComponent(params[key]));
+			}
+		}
+		qs = e.join('&');
+	}
+	var url = api_root.substring(0, api_root.length - 1) + uri + (qs !== null ? '?' + qs : '');
+
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url, true);
+
+	var headers = Model._headers || {};
+	for (var h in headers) {
+		if (headers.hasOwnProperty(h)) {
+			xhr.setRequestHeader(h, headers[h]);
+		}
+	}
+
+	xhr.onreadystatechange = function () {
+		if (this.readyState == 4) {
+			try {
+				var json = this.responseText.evalJSON();
+				callback(this.status, json, this);
+			} catch (exc) {
+				callback(this.status, null, this);				
+			}			
+		}
+	};
+	xhr.send(null);
+};
+
+
+Model._headers = {};
+Model.setGlobalHeaders = function (headers) {
+	Object.extend(this._headers, headers);
+};
+
 
 /**
  * Universal SQL factory
@@ -373,6 +388,10 @@ Model._getSQL = function (operation, table, selector, options) {
 					sql += "[" + key.replace(':', '__') + "] " + (sort[key] > 0 ? "ASC " : "DESC ");
 				}
 			}
+		}
+
+		if (options._one) {
+			sql += "LIMIT 1 ";
 		}
 		break;
 
@@ -435,77 +454,15 @@ Model._getSQL = function (operation, table, selector, options) {
 	return [sql, params];
 };
 
-Model.api = function (uri, params, callback) {
-	if (typeof arguments[1] == 'function') {
-		callback = arguments[1];
-		params = {};
-	}
-
-	var api_root = app._cfg.api_root;
-
-	var qs = null;
-	if (Object.toJSON(params) != '{}') {
-		var e = [];
-		for (var key in params) {
-			if (params.hasOwnProperty(key)) {
-				e.push(key + '=' + encodeURIComponent(params[key]));
-			}
-		}
-		qs = e.join('&');
-	}
-	var url = api_root.substring(0, api_root.length - 1) + uri + (qs !== null ? '?' + qs : '');
-
-	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url, true);
-
-	var headers = Model._headers || {};
-	for (var h in headers) {
-		if (headers.hasOwnProperty(h)) {
-			xhr.setRequestHeader(h, headers[h]);
-		}
-	}
-
-	xhr.onreadystatechange = function () {
-		if (this.readyState == 4) {
-			try {
-				var json = this.responseText.evalJSON();
-				callback(this.status, json, this);
-			} catch (exc) {
-				console.log(JSON.stringify(exc));
-				callback(this.status, null, this);				
-			}			
-		}
-	};
-	xhr.send(null);
-};
-
-Model._headers = {};
-Model.setGlobalHeaders = function (headers) {
-	Object.extend(this._headers, headers);
-};
-
-
 
 var Factory = {
-	'models': {},
-
-	'create': function (model_name, collection_name, spec) {
-		if (model_name === undefined || collection_name === undefined) {
-			throw 'Invalid state';
+	'create': function (spec) {
+		if (spec.fields instanceof Array !== true) {
+			throw 'Invalid model definition: Fields not specified';
 		}
-		if (typeof collection_name != 'string') {
-			if (typeof collection_name != 'object') {
-				throw 'Invalid state';
-			}
-			spec = collection_name;
-			collection_name = false;
-		}
-
-		spec.name = model_name;
-		spec.collection_name = collection_name;
 
 		var model = Class.create(Model, spec);
-		model.collection_name = collection_name;
+		model.collection = spec.collection;
 
 		// add the static methods as well
 		for (var method in Model) {
@@ -513,8 +470,7 @@ var Factory = {
 				model[method] = Model[method];
 			}
 		}
-		
-		Factory.models[model_name] = model;
+
 		return model;
 	}
 };
