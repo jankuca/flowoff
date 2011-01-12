@@ -2,6 +2,67 @@
 
 var l = window.location;
 
+var ObservableEvent = Class.create({
+	'initialize': function (type) {
+		this.type = type;
+	}
+});
+var Observable = Class.create({
+	'observe': function (type, listener) {
+		if (this.__event_listeners === undefined) {
+			this.__event_listeners = {};
+		}
+		if (this.__event_listeners[type] === undefined) {
+			this.__event_listeners[type] = [listener];
+		} else {
+			this.__event_listeners[type].push(listener);;
+		}
+	},
+
+	'stopObserving': function (type, listener) {
+		if (this.__event_listeners === undefined) {
+			return;
+		}
+		var listeners = this.__event_listeners[type];
+		if (listeners === undefined) {
+			return;
+		}
+
+		if (!listeners) {
+			delete this.__event_listeners[type];
+		} else {
+			for (var i = 0, ii = listeners.length; i < ii; ++i) {
+				if (listeners[i] === listener) {
+					delete this.__event_listeners[type][i];
+				}
+			}
+		}
+	},
+
+	'fire': function (type, memo) {
+		if (this.__event_listeners === undefined) {
+			return;
+		}
+		var listeners = this.__event_listeners[type];
+		if (listeners === undefined) {
+			return;
+		}
+
+		var event = new ObservableEvent(type);
+		event.target = this;
+		event.memo = memo;
+
+		for (var i = 0, ii = listeners.length; i < ii; ++i) {
+			var listener = listeners[i];
+			if (listener !== undefined) {
+				if (listener.call(this, event) === false) {
+					return false;
+				}
+			}
+		}
+	}
+});
+
 var Router = function () {
 	this._ns = '';
 	this._routes = [];
@@ -563,5 +624,6 @@ FlowOff._dbMigrate = function (last_migration, callback) {
 
 
 window.app = FlowOff;
+window.Observable = Observable;
 
 })(window);
