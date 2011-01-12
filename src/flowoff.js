@@ -466,12 +466,12 @@ FlowOff.call = function (uri) {
 	var hash = (uri.search('#') > -1) ? uri.split('#')[1] : uri;
 	this.data.hash = '#' + hash;
 
-	var qs = hash.split('?')[1];
-	hash = hash.split('?')[0];
-
 	if (l.hash != '#' + hash && hash != '/') {
 		l.hash = hash;
 	}
+
+	var qs = hash.split('?')[1];
+	hash = hash.split('?')[0];
 
 	/* 2) Route */
 	var route = this._router.match(hash, qs);
