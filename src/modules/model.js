@@ -183,10 +183,13 @@ var Model = Class.create({
 		}
 		return this;
 	},
+	'updateTimestamp': function (key) {
+		this[key] = Math.round(new Date().getTime() / 1000);
+	},
 
 	'remove': function (callback) {
 		if (this.soft_delete) {
-			this['date:deleted'] = Math.round(new Data().getTime() / 1000);
+			this.updateTimestamp('date:deleted');
 			this.save(callback);
 		} else if (this.exists()) {
 			var sql = Model._getSQL('delete', this.collection, { _id: this.getId() });
