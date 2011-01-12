@@ -1,3 +1,10 @@
+/**
+ * FlowOff Framework
+ * --
+ * @author Jan Kuča <jan@jankuca.com>, http://jankuca.com
+ * @company Flow Media, http://flowmedia.cz
+ */
+ 
 (function (window) {
 
 var l = window.location;
