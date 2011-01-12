@@ -41,7 +41,7 @@ var Model = Class.create({
 		for (r = 0, rr = rules.length; r < rr; ++r) {
 			key = rules[r];
 			if (!this[key]) {
-				if (typeof errors[key] === undefined) {
+				if (errors[key] === undefined) {
 					errors[key] = [];
 				}
 				errors[key].push('presence');
@@ -51,7 +51,7 @@ var Model = Class.create({
 		rules = this.constructor.prototype.validates_format_of || {};
 		for (key in rules) {
 			if (rules.hasOwnProperty(key) && !rules[key].test(this[key])) {
-				if (typeof errors[key] === undefined) {
+				if (errors[key] === undefined) {
 					errors[key] = [];
 				}
 				errors[key].push('format');
@@ -59,7 +59,7 @@ var Model = Class.create({
 		}
 
 		var errors_json = Object.toJSON(errors);
-		if (errors_json == '{}') {
+		if (errors_json != '{}') {
 			this.errors = errors;
 		}
 		return (errors_json == '{}');
