@@ -74,6 +74,14 @@ var Model = Class.create({
 	'setId': function (id) {
 		this.doc._id = id;
 	},
+	'generateId': function () {
+		if (this.doc._id) {
+			console.warn('Rewriting an UUID');
+		}
+
+		this.doc._id = Math.uuid(24, 16).toLowerCase().replace(/\-/g, '');
+		this._exists = false;
+	},
 
 	'setNS': function (ns) {
 		this.doc._ns = ns;
