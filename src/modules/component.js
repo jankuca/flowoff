@@ -1,6 +1,6 @@
 (function (window) {
 
-var Component = Class.create({
+var Component = Class.create(Observable, {
 	'initialize': function () {
 		this._components = [];
 		this._element = null;
