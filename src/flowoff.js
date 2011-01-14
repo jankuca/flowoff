@@ -561,7 +561,8 @@ FlowOff.component = function (key, vars) {
 		throw 'Undefined component "' + key + '"';
 	}
 
-	var component = new this._components[key]();	
+	var component = new this._components[key]();
+	component.name = key;
 	if (component instanceof Component !== true) {
 		throw 'The registered object is not a component (' + key + ')';
 	}
