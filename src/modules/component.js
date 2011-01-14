@@ -7,6 +7,11 @@ var Component = Class.create(Observable, {
 		this.data = {
 			'component': this
 		};
+		this.name = this.constructor.prototype.name;
+	},
+
+	'isRendered': function () {
+		return (this._element !== null);
 	},
 
 	'attach': function (key, component) {
@@ -26,8 +31,31 @@ var Component = Class.create(Observable, {
 		}
 		return this._components[key].slice();
 	},
-	'remove': function (key) {
-		this._components[key] = [];
+	'remove': function (key, component) {
+		var components = this._components[key],
+			c, cc;
+		if (components === undefined) {
+			return;
+		}
+		if (component === undefined || component === false) {
+			delete this._components[key];
+			if (component !== false) {
+				this.rerender(key);
+			}
+			return;
+		}
+		
+		for (c = 0, cc = components.length; c < cc; ++c) {
+			if (components[c] === component) {
+				console.log(component);
+				if (component._element) {
+					component._element.remove();
+				}
+				delete components[c];
+				this._components[key] = components.compact();
+				return;
+			}
+		}
 	},
 	'render': function () {
 		if (!this._template) {
@@ -85,10 +113,18 @@ var Component = Class.create(Observable, {
 		var components = this.getAttached(key);
 		for (var o = 0, oo = components.length; o < oo; ++o) {
 			var component = components[o];
+
+			if (not_rendered_only && component.isRendered()) {
+				continue;
+			}
 			if (typeof component.beforeRender == 'function') {
 				component.beforeRender();
 			}
-			placeholder.insert(component.render());
+			if (!not_rendered_only || o === 0) {
+				placeholder.insert(component.render());
+			} else {
+				placeholder.childElements()[o - 1].insert({ after: component.render() });
+			}
 			if (typeof component.afterRender == 'function') {
 				component.afterRender();
 			}
