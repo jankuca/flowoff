@@ -104,6 +104,11 @@ var Model = Class.create({
 			options = {};
 		}
 
+		var selector = {};
+		if (this.doc._ns) {
+			selector._ns = this.doc._ns;
+		}
+
 		var assoc_ids = this.doc[key];
 		if (assoc_ids instanceof Array) {
 			if (assoc_ids.length === 0) {
@@ -111,18 +116,25 @@ var Model = Class.create({
 			} else if (typeof assoc_ids[0] == 'object') {
 				var docs = [];
 				for (var i = 0, ii = assoc_ids.length; i < ii; ++i) {
-					docs.push(new type(assoc_ids, this._api_loaded));
+					if (this.doc._ns) {
+						assoc_ids[i]._ns = this.doc._ns;
+					}
+					docs.push(new type(assoc_ids[i], this._api_loaded));
 				}
 				callback(docs);
 			} else {
-				type.all({ _id: { $in: assoc_ids } }, options, callback);
+				selector._id = { $in: assoc_ids };
+				type.all(selector, options, callback);
 			}
 		} else if (typeof assoc_ids == 'object') {
+			if (this.doc._ns) {
+				assoc_ids._ns = this.doc._ns;
+			}
 			callback([new type(assoc_ids, this._api_loaded)]);
 		} else if (typeof assoc_ids == 'string') {
-			type.all({ _id: assoc_ids }, options, callback);
+			selector._id = assoc_ids;
+			type.all(selector, options, callback);
 		} else {
-			var selector = {};
 			selector[key] = this.getId();
 			type.all(selector, options, callback);
 		}
@@ -162,12 +174,19 @@ var Model = Class.create({
 			throw Error('Save operation failed: ' + error.message);
 		};
 		var execute_query = function (sql, params) {
-			this.transaction.executeSql(sql, params, fn_success, fn_error);
+			try {
+				this.transaction.executeSql(sql, params, fn_success, fn_error);
+			} catch (exc) {
+				app.db.transaction(function (tx) {
+					this.transaction = tx;
+					execute_query(sql, params);
+				}.bind(this));	
+			}
 		}.bind(this);
 
 		if (!this.transaction) {
 			app.db.transaction(function (tx) {
-				this.transaction = tx;				
+				this.transaction = tx;
 				execute_query(sql[0], sql[1]);
 			}.bind(this));
 		} else {
@@ -192,26 +211,34 @@ var Model = Class.create({
 			this.updateTimestamp('date:deleted');
 			this.save(callback);
 		} else if (this.exists()) {
-			var sql = Model._getSQL('delete', this.collection, { _id: this.getId() });
-
-			var fn_success = function (tx, result) {
-				callback();
-			};
-			var fn_error = function (tx, error) {
-				throw Error('Delete operation failed: ' + error.message);
-			};
-			var execute_query = function (sql, params) {
-				this.transaction.executeSql(sql, params, fn_success, fn_error);
-			}.bind(this);
-
-			if (!this.transaction) {
-				app.db.transaction(function (tx) {
-					this.transaction = tx;
-					execute_query(sql[0], sql[1]);
-				});
-			} else {
-				execute_query(sql[0], sql[1]);
+			if (this._api_loaded) {
+				throw 'Not implemented yet';
 			}
+
+			(this.beforeDelete || function (callback) { callback(); })(function () {
+				var sql = Model._getSQL('delete', this.collection, { _id: this.getId() });
+
+				var fn_success = function (tx, result) {
+					callback();
+				};
+				var fn_error = function (tx, error) {
+					throw Error('Delete operation failed: ' + error.message);
+				};
+				var execute_query = function (sql, params) {
+					this.transaction.executeSql(sql, params, fn_success, fn_error);
+				}.bind(this);
+
+				if (!this.transaction) {
+					app.db.transaction(function (tx) {
+						this.transaction = tx;
+						execute_query(sql[0], sql[1]);
+					});
+				} else {
+					execute_query(sql[0], sql[1]);
+				}
+			}.bind(this));
+		} else {
+			throw 'Invalid state: Cannot delete a document that either does not exist or has not been saved yet.';
 		}
 	}
 });
@@ -267,25 +294,25 @@ Model.all = function (selector, options, callback) {
 
 	// begin OFFLINE MODE
 
-	var sql = this._getSQL('select', this.collection, selector, options);
-	/*var sql = "SELECT * FROM [" + this.collection + "] ";
-	var params = [];
-	if (selector && Object.toJSON(selector) != '{}') {		
-		sql += "WHERE " + mongo2sql(selector, true) + " ";
-		params = params.concat(mongo2sql_params(selector));
+	if (this.prototype.soft_delete && !options.deleted && this.prototype.fields.indexOf('date:deleted') > -1) {
+		selector['date:deleted'] = { $exists: false };
 	}
-	if (options._one) {
-		sql += "LIMIT 1";
-	}*/
 
+	var sql = this._getSQL('select', this.collection, selector, options);
+	
 	var transaction;
 	var execute = function () {
 		transaction.executeSql(sql[0], sql[1], function (tx, results) {
 			var docs = [];
 			var rows = results.rows;
+			if (rows.length === 0 && options.fallback) {
+				fallback();
+				return;
+			}
 			for (var r = 0, rr = rows.length; r < rr; ++r) {
 				docs.push(new this(rows.item(r)));
 			}
+
 			callback(options._one ? docs.first() || new this() : docs);
 		}.bind(this), function (tx, error) {
 			console.error('SQLERROR: ' + error.message + '; ' + JSON.stringify(error));			
