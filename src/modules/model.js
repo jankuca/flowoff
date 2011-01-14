@@ -2,13 +2,18 @@
 
 var Model = Class.create({
 	'initialize': function (doc, api_loaded) {
-		doc = doc || {};
+		if (typeof doc === 'boolean') {
+			api_loaded = doc;
+			doc = {};
+		} else {
+			doc = doc || {};
+		}
 		
 		if (!doc._ns && !this.no_namespace) {
 			doc._ns = null;
 		}
 		this._api_loaded = !!api_loaded;
-		this._exists = !!api_loaded || !!doc._id;
+		this._exists = !!doc._id;
 		if (!this._exists) {
 			doc._id = null;
 		}
@@ -73,6 +78,7 @@ var Model = Class.create({
 	},
 	'setId': function (id) {
 		this.doc._id = id;
+		this._exists = true;
 	},
 	'generateId': function () {
 		if (this.doc._id) {
@@ -83,18 +89,29 @@ var Model = Class.create({
 		this._exists = false;
 	},
 
+	'getNS': function () {
+		return this.doc._ns || null;
+	},
 	'setNS': function (ns) {
 		this.doc._ns = ns;
 	},
 
 	'set': function (key, obj) {
-		this.doc[key] = obj.doc ? obj.getId() : obj;
+		if (!this._api_loaded) {
+			this.doc[key] = obj.doc ? obj.getId() : obj;
+		} else {
+			this.doc[key] = obj;
+		}
 	},
 	'add': function (key, obj) {
 		if (this.doc[key] === undefined || this.doc[key] instanceof Array !== true) {
-			this.doc[key] = [obj.doc ? obj.getId() : obj];
-		} else {
+			this.doc[key] = [];
+		}
+
+		if (!this._api_loaded) {
 			this.doc[key].push(obj.doc ? obj.getId() : obj);
+		} else {
+			this.doc[key].push(obj);
 		}
 	},
 
@@ -105,8 +122,8 @@ var Model = Class.create({
 		}
 
 		var selector = {};
-		if (this.doc._ns) {
-			selector._ns = this.doc._ns;
+		if (this.getNS()) {
+			selector._ns = this.getNS();
 		}
 
 		var assoc_ids = this.doc[key];
@@ -117,7 +134,7 @@ var Model = Class.create({
 				var docs = [];
 				for (var i = 0, ii = assoc_ids.length; i < ii; ++i) {
 					if (this.doc._ns) {
-						assoc_ids[i]._ns = this.doc._ns;
+						assoc_ids[i].setNS(this.getNS());
 					}
 					docs.push(new type(assoc_ids[i], this._api_loaded));
 				}
@@ -128,9 +145,9 @@ var Model = Class.create({
 			}
 		} else if (typeof assoc_ids == 'object') {
 			if (this.doc._ns) {
-				assoc_ids._ns = this.doc._ns;
+				assoc_ids.setNS(this.getNS());
 			}
-			var doc = new type(assoc_ids, this._api_loaded);
+			var doc = assoc_ids;
 			callback(options._one ? doc : [doc]);
 		} else if (typeof assoc_ids == 'string') {
 			selector._id = assoc_ids;
@@ -280,10 +297,12 @@ Model.all = function (selector, options, callback) {
 				for (var i = 0, ii = response.length; i < ii; ++i) {
 					docs.push(new this(response[i], true));
 				}
-				callback(options._one ? (docs[0] || new this()) : docs);
-			} else {
+				callback(options._one ? (docs[0] || new this(true)) : docs);
+			} else if (typeof response === 'object') {
 				var doc = new this(response, true);
 				callback(options._one ? doc : [doc]);
+			} else {
+				callback(options._one ? new this(true) : []);
 			}
 		}.bind(this));
 	}.bind(this);
@@ -369,12 +388,15 @@ Model.api = function (uri, params, callback) {
 
 	xhr.onreadystatechange = function () {
 		if (this.readyState == 4) {
+			var json;
 			try {
-				var json = this.responseText.evalJSON();
-				callback(this.status, json, this);
+				json = this.responseText.evalJSON();
 			} catch (exc) {
 				callback(this.status, null, this);				
-			}			
+			}
+			if (json) {
+				callback(this.status, json, this);
+			}
 		}
 	};
 	xhr.send(null);
