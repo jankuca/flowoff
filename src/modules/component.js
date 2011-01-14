@@ -147,16 +147,18 @@ var Component = Class.create(Observable, {
 	}
 });
 
+var fn_dynamicLink = function (event) {
+	var href = this.readAttribute('href');
+	if (href[0] == '#') {
+		event.preventDefault();
+		event.stopPropagation();
+		app.call(href);
+	}
+};
 var makeLinksDynamic = function (el) {
 	el.select('a[href]').each(function (a) {
-		var href = a.readAttribute('href');
-		if (href[0] == '#') {
-			a.observe('click', function (event) {
-				event.preventDefault();
-				event.stopPropagation();
-				app.call(href);
-			});
-		}
+		a.stopObserving('click', fn_dynamicLink);
+		a.observe('click', fn_dynamicLink);
 	});
 };
 
