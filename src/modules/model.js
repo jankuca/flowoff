@@ -121,7 +121,7 @@ var Model = Class.create({
 					}
 					docs.push(new type(assoc_ids[i], this._api_loaded));
 				}
-				callback(docs);
+				callback(options._one ? docs[0] : docs);
 			} else {
 				selector._id = { $in: assoc_ids };
 				type.all(selector, options, callback);
@@ -130,7 +130,8 @@ var Model = Class.create({
 			if (this.doc._ns) {
 				assoc_ids._ns = this.doc._ns;
 			}
-			callback([new type(assoc_ids, this._api_loaded)]);
+			var doc = new type(assoc_ids, this._api_loaded);
+			callback(options._one ? doc : [doc]);
 		} else if (typeof assoc_ids == 'string') {
 			selector._id = assoc_ids;
 			type.all(selector, options, callback);
