@@ -573,15 +573,17 @@ FlowOff.component = function (key, vars) {
 
 /* LANG */
 FlowOff.lang = function (key, params) {
-	if (typeof this._lang[key] == 'undefined') {
+	if (this._lang[key] === undefined) {
 		console.warn('Unknown lang key: ' + key);
 		return '';
 	}
 	
 	var lang = this._lang[key];
-	if (typeof params != 'undefined') {
-		for (var i = 0, ii = params.length; i < ii; ++i) {
-			lang = lang.replace('{$'+i+'}',params[i]);
+	if (params !== undefined) {
+		for (var i in params) {
+			if (params.hasOwnProperty(i)) {
+				lang = lang.replace('{$' + i + '}', params[i]);
+			}
 		}
 	}
 	return lang;
