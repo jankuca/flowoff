@@ -299,7 +299,7 @@ Model.all = function (selector, options, callback) {
 	}
 
 	var fallback = function () {
-		this.api(options.fallback, function (status, response) {
+		this.api('GET', options.fallback, function (status, response) {
 			if (response instanceof Array) {
 				var docs = [];
 				for (var i = 0, ii = response.length; i < ii; ++i) {
@@ -364,10 +364,15 @@ Model.all = function (selector, options, callback) {
 	}
 };
 
-Model.api = function (uri, params, callback) {
-	if (typeof arguments[1] == 'function') {
-		callback = arguments[1];
+Model.api = function (method, uri, params, data, callback) {
+	if (typeof arguments[2] == 'function') {
+		callback = arguments[2];
 		params = {};
+		data = {};
+	}
+	if (typeof arguments[3] == 'function') {
+		callback = arguments[3];
+		data = {};
 	}
 
 	var api_root = app._cfg.api_root;
@@ -385,7 +390,7 @@ Model.api = function (uri, params, callback) {
 	var url = api_root.substring(0, api_root.length - 1) + uri + (qs !== null ? '?' + qs : '');
 
 	var xhr = new XMLHttpRequest();
-	xhr.open('GET', url, true);
+	xhr.open(method, url, true);
 
 	var headers = Model._headers || {};
 	for (var h in headers) {
@@ -407,7 +412,7 @@ Model.api = function (uri, params, callback) {
 			}
 		}
 	};
-	xhr.send(null);
+	xhr.send(Object.toQueryString(data));
 };
 
 
