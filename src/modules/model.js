@@ -148,6 +148,9 @@ var Model = Class.create({
 				assoc_ids.setNS(this.getNS());
 			}
 			var doc = assoc_ids;
+			if (doc.doc === undefined) {
+				doc = new type(doc);
+			}
 			callback(options._one ? doc : [doc]);
 		} else if (typeof assoc_ids == 'string') {
 			selector._id = assoc_ids;
