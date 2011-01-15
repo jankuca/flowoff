@@ -226,11 +226,12 @@ var Model = Class.create({
 
 		var fn_success = function (tx, result) {
 			this._exists = true;
-			callback();
 
 			if (typeof this.afterSave === 'function') {
 				this.afterSave();
 			}
+
+			callback();
 		}.bind(this);
 		var fn_error = function (tx, error) {
 			throw Error('Save operation failed: ' + error.message);
