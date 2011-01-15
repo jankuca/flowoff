@@ -173,7 +173,12 @@ var Model = Class.create({
 		this.get(key, type, options, callback);
 	},
 
-	'save': function (callback) {
+	'save': function (options, callback) {
+		if (typeof options === 'function') {
+			callback = options;
+			options = {};
+		}
+
 		if (typeof this.beforeSave === 'function') {
 			this.beforeSave();
 		}
@@ -182,6 +187,34 @@ var Model = Class.create({
 			if (this.hasOwnProperty(key) && key.search(':') > -1) {
 				this.doc[key] = this[key];
 			}
+		}
+
+		var fallback = function () {
+			if (options.fallback === undefined) {
+				throw 'Invalid state: No fallback URI specified';
+			}
+			if (options.method === undefined) {
+				options.method = !this._exists ? 'POST' : 'PUT';
+			}
+
+			var data = {};
+			var doc = this.doc;
+			for (var key in doc) {
+				if (doc.hasOwnProperty(key) && (key === '_id' || key.search(':') > -1)) {
+					data[key] = doc[key];
+				}
+			}
+
+			Model.api(options.method, options.fallback, {}, data, function (status, response) {
+				if (status === 204) {
+					callback();
+				}
+			}.bind(this));
+		}.bind(this);
+
+		if (app.MODE === 'online' || options.online) {
+			fallback();
+			return;
 		}
 
 		var sql = Model._getSQL(
