@@ -171,6 +171,10 @@ var Model = Class.create({
 	},
 
 	'save': function (callback) {
+		if (typeof this.beforeSave === 'function') {
+			this.beforeSave();
+		}
+
 		for (var key in this) {
 			if (this.hasOwnProperty(key) && key.search(':') > -1) {
 				this.doc[key] = this[key];
@@ -187,6 +191,10 @@ var Model = Class.create({
 		var fn_success = function (tx, result) {
 			this._exists = true;
 			callback();
+
+			if (typeof this.afterSave === 'function') {
+				this.afterSave();
+			}
 		}.bind(this);
 		var fn_error = function (tx, error) {
 			throw Error('Save operation failed: ' + error.message);
@@ -298,7 +306,7 @@ Model.all = function (selector, options, callback) {
 					docs.push(new this(response[i], true));
 				}
 				callback(options._one ? (docs[0] || new this(true)) : docs);
-			} else if (typeof response === 'object') {
+			} else if (typeof response === 'object' && response !== null) {
 				var doc = new this(response, true);
 				callback(options._one ? doc : [doc]);
 			} else {
