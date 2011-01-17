@@ -235,7 +235,7 @@ Router.prototype.match = function (uri, qs) {
 	return null;
 };
 
-Router.prototype.resolve = function (target, abs) {
+Router.prototype.resolve = function (target) {
 	if (abs && !app._cfg.domain) {
 		throw 'Invalid state: No domain set';
 	}
@@ -333,7 +333,7 @@ Router.prototype.resolve = function (target, abs) {
 				uri = uri.replace(':' + key, params[key]);
 			}
 		}
-		return (abs ? 'http://' + app._cfg.domain + (app._cfg.port !== 80 ? ':' + app._cfg.port : '') : '') + uri + create_qs(params, param_keys);
+		return uri + create_qs(params, param_keys);
 	}
 
 	return null;
@@ -522,9 +522,12 @@ FlowOff.redirect = function (cv, params) {
 	this.call(this.link(cv.replace(/:$/, ':default'), params));
 };
 
-FlowOff.link = function (cv, params) {
+FlowOff.link = function (cv, params, options) {
 	if (cv === undefined) {
 		return this.data.hash;
+	}
+	if (options === undefined) {
+		options = {};
 	}
 
 	var abs = (cv.substring(0, 2) == '//');
@@ -538,9 +541,9 @@ FlowOff.link = function (cv, params) {
 		'controller': cv[0],
 		'view': cv[1],
 		'params': params
-	}, abs);
+	});
 
-	return '#' + (uri !== null ? uri : '/error/s404');
+	return (abs ? 'http://' + app._cfg.domain + (!options.no_port ? ':' + app._cfg.port : '') : '#') + (uri !== null ? uri : '/error/s404');
 };
 
 FlowOff.registerController = function (key, Controller) {
