@@ -236,10 +236,6 @@ Router.prototype.match = function (uri, qs) {
 };
 
 Router.prototype.resolve = function (target) {
-	if (abs && !app._cfg.domain) {
-		throw 'Invalid state: No domain set';
-	}
-
 	var routes = this._routes,
 		route,
 		uri,
@@ -535,6 +531,10 @@ FlowOff.link = function (cv, params, options) {
 		cv = cv.substring(2);
 	}
 	cv = cv.replace(/:$/, ':default').split(':');
+
+	if (abs && !app._cfg.domain) {
+		throw 'Invalid state: No domain set';
+	}
 
 	var uri = this._router.resolve({
 		'namespace': null,
