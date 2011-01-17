@@ -206,7 +206,7 @@ var Model = Class.create({
 			}
 
 			Model.api(options.method, options.fallback, {}, data, function (status, response) {
-				if (status === 204) {
+				if (status === 201) {
 					callback();
 				}
 			}.bind(this));
@@ -270,6 +270,29 @@ var Model = Class.create({
 	},
 
 	'remove': function (callback) {
+		var fallback = function () {
+			if (options.fallback === undefined) {
+				throw 'Invalid state: No fallback URI specified';
+			}
+			if (!this._exists) {
+				throw 'Invalid state: Cannot delete a document that is not saved.';
+			}
+
+			if (options.method === undefined) {
+				options.method = 'DELETE';
+			}
+			Model.api(options.method, options.fallback, {}, this.doc, function (status, response) {
+				if (status === 204) {
+					callback();
+				}
+			}.bind(this));
+		}.bind(this);
+
+		if (app.MODE === 'online' || options.online) {
+			fallback();
+			return;
+		}
+
 		if (this.soft_delete) {
 			this.updateTimestamp('date:deleted');
 			this.save(callback);
