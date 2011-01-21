@@ -1,0 +1,9 @@
+[submodule "lib/ejs"]
+	path = lib/ejs
+	url = git://gist.github.com/788091.git
+[submodule "lib/mongo2sql"]
+	path = lib/mongo2sql
+	url = git://gist.github.com/761760.git
+[submodule "lib/uuid"]
+	path = lib/uuid
+	url = git://gist.github.com/789412.git

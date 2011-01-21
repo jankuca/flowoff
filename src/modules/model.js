@@ -85,7 +85,7 @@ var Model = Class.create({
 			console.warn('Rewriting an UUID');
 		}
 
-		this.doc._id = Math.uuid(24, 16).toLowerCase().replace(/\-/g, '');
+		this.doc._id = uuid().replace(/\-/g, '');
 		this._exists = false;
 	},
 
@@ -494,6 +494,7 @@ Model._getSQL = function (operation, table, selector, options) {
 	var sql = "";
 	var params = [];
 	var key;
+	var res;
 	switch (operation) {
 	case 'select':
 		sql += "SELECT ";
@@ -505,8 +506,9 @@ Model._getSQL = function (operation, table, selector, options) {
 		sql += "FROM [" + table + "] ";
 
 		if (selector && Object.toJSON(selector) != '{}') {
-			params = params.concat(mongo2sql_params(selector));
-			sql += "WHERE " + mongo2sql(selector, true) + " ";
+			res = mongo2sql_parametric(selector);
+			params = params.concat(res[1]);
+			sql += "WHERE " + res[0] + " ";
 		}
 
 		var sort = options.sort;
@@ -565,23 +567,17 @@ Model._getSQL = function (operation, table, selector, options) {
 		}
 		sql = sql.substring(0, sql.length - 2) + " ";
 
-		for (key in selector) {
-			if (selector.hasOwnProperty(key)) {
-				params.push(selector[key]);
-			}
-		}
-		sql += "WHERE " + mongo2sql(selector, true);
+		res = mongo2sql_parametric(selector);
+		params = params.concat(res[1]);
+		sql += "WHERE " + res[0];
 		break;
 
 	case 'delete':
 		sql += "DELETE FROM [" + table + "] ";
 		
-		for (key in selector) {
-			if (selector.hasOwnProperty(key)) {
-				params.push(selector[key]);
-			}
-		}
-		sql += "WHERE " + mongo2sql(selector, true);
+		res = mongo2sql_parametric(selector);
+		params = params.concat(res[1]);
+		sql += "WHERE " + res[0];
 		break;
 	}
 
