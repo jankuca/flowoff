@@ -477,6 +477,7 @@ Model.api = function (method, uri, params, data, callback) {
 
 
 Model._headers = {};
+Model._headers['x-requested-with'] = 'XMLHttpRequest';
 Model.setGlobalHeaders = function (headers) {
 	Object.extend(this._headers, headers);
 };
