@@ -596,6 +596,27 @@ FlowOff.registerLang = function (lang) {
 	Object.extend(this._lang, lang);
 };
 
+FlowOff.getState = function (callback) {
+	if (this.MODE !== 'offline') {
+		callback(null);
+		return;
+	}
+
+	this.db.transaction(function (tx) {
+		tx.executeSql("SELECT [key], [value] FROM [_state]", [], function (tx, result) {
+			var rows = result.rows;
+			var state = {};
+			for (var i = 0, ii = rows.length; i < ii; ++i) {
+				var row = rows.item(i);
+				var val = row.value.toString();
+				state[row.key] = val.match(/^[0-9]+$/) ? parseInt(val, 10) : val;
+			}
+
+			callback(state);
+		});
+	});
+};
+
 FlowOff._dbMigrate = function (last_migration, callback) {
 	if (this._migrations === undefined) {
 		throw 'No migration file provided';
