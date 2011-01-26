@@ -269,7 +269,12 @@ var Model = Class.create({
 		this[key] = Math.round(new Date().getTime() / 1000);
 	},
 
-	'remove': function (callback) {
+	'remove': function (options, callback) {
+		if (arguments.length === 1 && typeof options === 'function') {
+			callback = options;
+			options = {};
+		}
+
 		var fallback = function () {
 			if (options.fallback === undefined) {
 				throw 'Invalid state: No fallback URI specified';
