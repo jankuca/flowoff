@@ -29,7 +29,7 @@ Following examples will work with this directory structure:
 
 ## Bootstrapping ##
 
-There is no strict way to prepare the evnironment and run the app, but the following approach is recommended. The entire app is built using JavaScript; therefore, the initial markup (HTML) is extremely straightforward.
+There is no strict way to prepare the environment and run the app, but the following approach is recommended. The entire app can be built using JavaScript; therefore, the initial markup (HTML) is extremely straightforward.
 
 	// index.html:
 
@@ -54,7 +54,6 @@ The boot sequence can be embedded in the HTML of course. In the example, an exte
 	require.ROOT = '/js/';
 	// Currently, you have to manually require all modules.
 	require.js(
-		'lib/prototype/prototype.js',
 		'lib/flowoff/src/flowoff.js',
 		'lib/flowoff/lib/ejs/ejs.js',
 		'lib/flowoff/lib/mongo2sql/mongo2sql.js',
@@ -74,7 +73,7 @@ The boot sequence can be embedded in the HTML of course. In the example, an exte
 			app.set('db_title', 'Školní sešit.cz');
 
 			// Set up routes
-			var router = app.getRouter();
+			var router = app.router;
 			// Root route
 			router.push('/', {
 				'controller': 'default',
@@ -157,7 +156,7 @@ If you push a migration with an error in it, you database will not get corrupted
 
 	// app/controllers/default.js
 
-	app.registerController('default', Class.create(Controller, {
+	var BookController = Controller.inherit({
 
 		// Startup method - called when the app starts
 		// Note that only one controller#startup will be called. This usually contains a sequence to build the app UI layout and determine the current user.
@@ -191,14 +190,14 @@ If you push a migration with an error in it, you database will not get corrupted
 
 			window.layout.replace('content', content);
 
-		}
+		},
 	
 	}));
 
 	
 	// define components
 	// (Globally needed components should be defined in the abstract controller file mentioned before.)
-	app.registerComponent('layout', Class.create(Component, {
+	app.registerComponent('layout', Component.inherit({
 	
 		'_template': '<div id="layout">' +
 			'<div id="header"><%= title %></div>' +
@@ -207,13 +206,13 @@ If you push a migration with an error in it, you database will not get corrupted
 
 	}));
 
-	app.registerComponent('content', Class.create(Component, {
+	app.registerComponent('content', Component.inherit({
 
 		'_template': '<div id="content" components="boxes"></div>'
 
 	}));
 
-	app.registerComponent('content.box', Class.create(Component, {
+	app.registerComponent('content.box', Component.inherit({
 
 		'_template': '<div class="box"><%= data %></div>'
 
@@ -229,7 +228,7 @@ Each component has its markup stored in its `_template` property. The markup can
 
 Components are meant to be structured in a tree using the `component#attach` method.
 
-	app.registerComponent('list', Class.create(Component, {
+	app.registerComponent('list', Component.inherit({
 		'_template': '<ul components="items"></ul>',
 
 		'afterRender': function () {
@@ -237,7 +236,7 @@ Components are meant to be structured in a tree using the `component#attach` met
 		}
 	}));
 
-	app.registerComponent('list.item', Class.create(Component, {
+	app.registerComponent('list.item', Component.inherit({
 		'_template': '<li>' +
 			'<% if (typeof link != "undefined") { %>' +
 			'<a href="<%= link %>"><%= label %></a>' +
@@ -288,11 +287,7 @@ Models are currently under heavy development. A lot of features are missing.
 
 Each model definition is created using the model factory accessible via the `app.registerModel` method.
 
-	window.User = app.registerModel('User', 'users', {
-
-		// define the model scheme
-		// Each field has to be namespaced (NS:KEY, or :KEY with an empty namespace).
-		'fields': ['users:username', 'users:realname', 'date:created'],
+	var User = Model.inherit({
 
 		// define a model-specific method
 		'getFriends': function (callback) {
@@ -301,9 +296,14 @@ Each model definition is created using the model factory accessible via the `app
 			selector._id = { $ne: this.getId() };
 
 			User.all(selector, callback);
-		}
+		},
 	
 	});
+	// define the collection/table
+	User.collection = 'users';
+	// define the model scheme
+	// Each field has to be namespaced (NS:KEY, or :KEY with an empty namespace).
+	User.fields = ['users:username', 'users:realname', 'date:created'];
 
 	
 	// Usage in a controller:

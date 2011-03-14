@@ -1,9 +1,9 @@
-(function (window) {
+(function () {
+"use strict";
 
-var Controller = Class.create({
-});
+var Controller = Function.inherit();
 
 
 window.Controller = Controller;
 
-})(window);
+})();

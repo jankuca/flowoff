@@ -1,16 +1,18 @@
-if (window.Form === undefined) {
-	window.Form = Class.create({
-	});
-}
+(function () {
+"use strict";
 
-window.Form.getValues = function (form) {
-	var values = {};
-	form.select('input', 'select', 'textarea').each(function (item) {
-		var name = item.readAttribute('name');
-		if (name) {
-			values[name.replace('__', ':')] = item.getValue();
-		}
-	});
-	
-	return values;
-};
+Object.defineProperty(window.HTMLFormElement.prototype, 'values', {
+	get: function () {
+		var values = {};
+		this.find('input', 'select', 'textarea').forEach(function (item) {
+			var name = item.attr('name');
+			if (name) {
+				values[name.replace('__', ':')] = item.value;
+			}
+		});
+
+		return values;
+	}
+});
+
+}());

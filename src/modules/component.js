@@ -1,19 +1,43 @@
-(function (window) {
+/*global Element, EJS*/
 
-var Component = Class.create(Observable, {
-	'initialize': function () {
-		this._components = [];
-		this._element = null;
-		this.data = {
-			'component': this
-		};
-		this.name = this.constructor.prototype.name;
+(function () {
+"use strict";
+
+var fn_dynamicLink = function (event) {
+	var href = this.attr('href');
+	if (href[0] === '#') {
+		event.preventDefault();
+		event.stopPropagation();
+		app.call(href);
+	}
+};
+var makeLinksDynamic = function (el) {
+	el.find('a[href]').forEach(function (a) {
+		a.removeEventListener('click', fn_dynamicLink);
+		a.addEventListener('click', fn_dynamicLink);
+	});
+};
+
+
+var Component = Function.inherit(function () {
+	var component = this;
+
+	this._components = {};
+	this.element = null;
+	this.data = {
+		'component': this
+	};
+	this.name = this.constructor.prototype.name;
+
+	Object.defineProperty(this, 'rendered', {
+		get: function () {
+			return (component.element !== null);
+		},
+	});
+}, {
+	'toString': function () {
+		return '[object Component]';
 	},
-
-	'isRendered': function () {
-		return (this._element !== null);
-	},
-
 	'attach': function (key, component) {
 		if (component instanceof Component !== true) {
 			throw 'The passed object is not a component (' + key + ')';
@@ -47,9 +71,8 @@ var Component = Class.create(Observable, {
 		
 		for (c = 0, cc = components.length; c < cc; ++c) {
 			if (components[c] === component) {
-				console.log(component);
-				if (component._element) {
-					component._element.remove();
+				if (component.element) {
+					component.element.remove();
 				}
 				delete components[c];
 				this._components[key] = components.compact();
@@ -67,39 +90,37 @@ var Component = Class.create(Observable, {
 		});
 		var html = ejs.render(this.data);
 
-		var div = new Element('div').update(html);
-		div.select('*[components]').each(function (placeholder) {
-			var key = placeholder.readAttribute('components');
+		var div = new Element('div').html(html);
+		div.find('*[components]').forEach(function (placeholder) {
+			var key = placeholder.attr('components');
 			if (key !== null) {
-				var components = this.getAttached(key);
-				for (var o = 0; o < components.length; ++o) {
-					var component = components[o];
-					if (typeof component.beforeRender == 'function') {
+				this.getAttached(key).forEach(function (component) {
+					if (typeof component.beforeRender === 'function') {
 						component.beforeRender();
 					}
 					placeholder.insert(component.render());
-					if (typeof component.afterRender == 'function') {
+					if (typeof component.afterRender === 'function') {
 						component.afterRender();
 					}
-				}
+				});
 			}
-		}.bind(this));
-		
-		this._element = div.firstChild;
-		makeLinksDynamic(this._element);
-		return this._element;
+		}, this);
+
+		this.element = div.firstChild;
+		makeLinksDynamic(this.element);
+		return this.element;
 	},
-	rerender: function (key, not_rendered_only) {
-		if (!this._element) {
+	'rerender': function (key, not_rendered_only) {
+		if (!this.element) {
 			throw 'Invalid state: Cannot rerender components in an unrendered component';
 		}
 
 		var placeholder;
-		var element_key = this._element.readAttribute('components');
-		if (element_key !== null && element_key == key) {
-			placeholder = this._element;
+		var element_key = this.element.attr('components');
+		if (element_key !== null && element_key === key) {
+			placeholder = this.element;
 		} else {
-			placeholder = this._element.select('*[components="' + key + '"]').first();
+			placeholder = this.element.find('*[components="' + key + '"]').first();
 		}
 		if (placeholder === undefined) {
 			console.warn('There is no such component placeholder "' + key + '".');
@@ -107,28 +128,25 @@ var Component = Class.create(Observable, {
 		}
 
 		if (!not_rendered_only) {
-			placeholder.update();
+			placeholder.html(null);
 		}
 		
-		var components = this.getAttached(key);
-		for (var o = 0, oo = components.length; o < oo; ++o) {
-			var component = components[o];
-
-			if (not_rendered_only && component.isRendered()) {
-				continue;
+		this.getAttached(key).forEach(function (component, i) {
+			if (not_rendered_only && component.rendered) {
+				return;
 			}
-			if (typeof component.beforeRender == 'function') {
+			if (typeof component.beforeRender === 'function') {
 				component.beforeRender();
 			}
-			if (!not_rendered_only || o === 0) {
+			if (!not_rendered_only || i === 0) {
 				placeholder.insert(component.render());
 			} else {
-				placeholder.childElements()[o - 1].insert({ after: component.render() });
+				placeholder.childNodes[i - 1].insert({ after: component.render() });
 			}
-			if (typeof component.afterRender == 'function') {
+			if (typeof component.afterRender === 'function') {
 				component.afterRender();
 			}
-		}
+		});
 	},
 	'replace': function (key, components) {
 		if (components instanceof Array !== true) {
@@ -136,33 +154,16 @@ var Component = Class.create(Observable, {
 		}
 
 		this._components[key] = [];
-		for (var i = 0, ii = components.length; i < ii; ++i) {
-			var component = components[i];
+		components.forEach(function (component) {
 			if (component instanceof Component !== true) {
 				throw 'One of the passed objects is not a component (' + key + ')';
 			}
 			this._components[key].push(component);
-		}
+		}, this);
 		this.rerender(key);
 	}
 });
 
-var fn_dynamicLink = function (event) {
-	var href = this.readAttribute('href');
-	if (href[0] == '#') {
-		event.preventDefault();
-		event.stopPropagation();
-		app.call(href);
-	}
-};
-var makeLinksDynamic = function (el) {
-	el.select('a[href]').each(function (a) {
-		a.stopObserving('click', fn_dynamicLink);
-		a.observe('click', fn_dynamicLink);
-	});
-};
-
-
 window.Component = Component;
 
-})(window);
+})();
