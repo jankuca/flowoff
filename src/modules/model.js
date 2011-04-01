@@ -333,9 +333,6 @@ Model = Function.inherit(function (doc) {
 		if (typeof this.beforeSave === 'function') {
 			this.beforeSave();
 		}
-		if (!this.isValid()) {
-			throw new Error('Item is not valid');
-		}
 
 		var op = new ApiOperation(
 			this.stored ? 'PUT' : 'POST',
@@ -432,36 +429,6 @@ Model = Function.inherit(function (doc) {
 		} else {
 			app.db.transaction(execute);
 		}
-	},
-
-	'isValid': function () {
-		var errors = {},
-			errors_json,
-			rules;
-
-		rules = this.constructor.prototype.validates_presence_of || [];
-		rules.forEach(function (key) {
-			if (!this[key]) {
-				if (errors[key] === undefined) {
-					errors[key] = [];
-				}
-				errors[key].push('presence');
-			}
-		}, this);
-
-		rules = this.constructor.prototype.validates_format_of || {};
-		Object.getOwnPropertyNames(rules).forEach(function () {
-			if (!rules[key].test(this[key])) {
-				if (errors[key] === undefined) {
-					errors[key] = [];
-				}
-				errors[key].push('format');
-			}
-		}, this);
-
-		errors_json = JSON.stringify(errors);
-		this.errors = (errors_json !== '{}') ? errors : null;
-		return !this.errors;
 	},
 
 	'generateId': function () {
