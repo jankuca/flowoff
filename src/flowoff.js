@@ -60,6 +60,10 @@ app = {
 		this._cfg[key] = value;
 	},
 
+	'get': function (key) {
+		return this._cfg[key] || null;
+	},
+
 	'run': function (callback) {
 		var app = this;
 
