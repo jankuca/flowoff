@@ -76,8 +76,6 @@ app = {
 			l.hash = '#!/';
 		}
 		
-		this.set('ROOT', this._cfg.dir);
-		
 		window.addEventListener('flowoff:callend', function () {
 			app.data.viewReady = true;
 		});
