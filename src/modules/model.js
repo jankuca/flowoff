@@ -244,7 +244,9 @@ Model = Function.inherit(function (doc) {
 					throw new Error('No parent association');
 				}
 				doc._parent = (value instanceof Model) ? value[app.MODE === 'offline' ? 'id' : value.constructor.api_field] : value;
-				this._cache.parent = (value instanceof Model) ? value : undefined;
+				if (app.MODE !== 'offline') {
+					this._cache.parent = (value instanceof Model) ? value : undefined;
+				}
 				_changed = true;
 			},
 		}
@@ -369,7 +371,7 @@ Model = Function.inherit(function (doc) {
 				model.changed = false;
 
 				callback(null);
-				if (options.online !== false) {
+				if (model.constructor.online !== false && options.online !== false) {
 					app.queue(op);
 				}
 			}, function (tx, err) {
@@ -488,9 +490,9 @@ Model.all = function (selector, options, callback) {
 		selector = { _id: selector };
 	}
 
-	if (options.online === true || app.MODE === 'online') {
-		var uri = (options.limit === 1) ? this.getApiUri(selector[M.api_field.replace(/^id$/, '_id')]) : this.getApiUri();
-		this.api('GET', uri, function (status, response) {
+	var fallback = function () {
+		var uri = (options.limit === 1) ? M.getApiUri(selector[M.api_field.replace(/^id$/, '_id')]) : M.getApiUri();
+		M.api('GET', uri, function (status, response) {
 			if (status !== 200) {
 				if (options.limit === 1) {
 					callback(new M());
@@ -509,6 +511,9 @@ Model.all = function (selector, options, callback) {
 				callback(models);
 			}
 		});
+	};
+	if (options.online === true || app.MODE === 'online') {
+		fallback();
 		return;
 	}
 
@@ -555,7 +560,7 @@ Model.all = function (selector, options, callback) {
 				callback(options.limit !== 1 ? models : models[0] || new M());
 			} else {
 				// fallback to online
-				callback([]);
+				fallback();
 			}
 		}, function (tx, err) {
 			console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
