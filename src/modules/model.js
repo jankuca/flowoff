@@ -312,7 +312,9 @@ Model = Function.inherit(function (doc) {
 					cache._cache.parent = this;
 				}
 			}
-			this._cache[key] = cache;
+			if (app.MODE !== 'offline') {
+				this._cache[key] = cache;
+			}
 			delete doc[key];
 		}
 	}, this);
@@ -365,6 +367,7 @@ Model = Function.inherit(function (doc) {
 		st.data = this.doc;
 
 		sql = st.sql;
+		console.log(sql);
 		execute = function (tx) {
 			tx.executeSql(sql[0], sql[1], function (tx, result) {
 				model.stored = true;
@@ -491,15 +494,20 @@ Model.all = function (selector, options, callback) {
 	}
 
 	var fallback = function () {
-		var uri = (options.limit === 1) ? M.getApiUri(selector[M.api_field.replace(/^id$/, '_id')]) : M.getApiUri();
+		var uri = options.fallback;
+		if (!uri) {
+			uri = (options.limit === 1) ? M.getApiUri(selector[M.api_field.replace(/^id$/, '_id')]) : M.getApiUri();
+		}
 		M.api('GET', uri, function (status, response) {
 			if (status !== 200) {
-				if (options.limit === 1) {
+				return callback(options.limit !== 1 ? [] : new M());
+				/*if (options.limit === 1) {
 					callback(new M());
 				} else {
+					callb
 					alert('Failed to fetch ' + M.collection);
 				}
-				return;
+				return;*/
 			}
 			if (options.limit === 1) {
 				callback(new M(response));
@@ -558,9 +566,11 @@ Model.all = function (selector, options, callback) {
 					models.push(new M(doc));
 				}
 				callback(options.limit !== 1 ? models : models[0] || new M());
-			} else {
+			} else if (M.online !== false) {
 				// fallback to online
 				fallback();
+			} else {
+				callback(options.limit !== 1 ? [] : new M());
 			}
 		}, function (tx, err) {
 			console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
@@ -589,6 +599,7 @@ Model.has_one = function (has_one) {
 				options = {};
 				callback = arguments[0];
 			}
+			console.log(key);
 
 			var model = window[name],
 				selector = {};
@@ -599,6 +610,10 @@ Model.has_one = function (has_one) {
 				selector[key] = sel[key];
 			});
 
+			if (!options.fallback) {
+				options.fallback = this.constructor.getApiUri(this[this.constructor.api_field], key);
+			}
+
 			if (app.MODE === 'offline') {
 				selector._parent = this.id;
 				return model.one(selector, options, callback);
@@ -607,8 +622,7 @@ Model.has_one = function (has_one) {
 					callback(this._cache[key]);
 					return;
 				}
-				var uri = this.constructor.getApiUri(this[this.constructor.api_field], key);
-				model.api('GET', uri, function (status, response) {
+				model.api('GET', options.fallback, function (status, response) {
 					if (status !== 200) {
 						callback(new model());
 						return;
@@ -656,6 +670,10 @@ Model.has_many = function (has_many) {
 				selector[key] = sel[key];
 			});
 
+			if (!options.fallback) {
+				options.fallback = this.constructor.getApiUri(this[this.constructor.api_field], name);
+			}
+
 			if (app.MODE === 'offline') {
 				selector._parent = this.id;
 				return model.all(selector, options, callback);
@@ -664,8 +682,7 @@ Model.has_many = function (has_many) {
 					callback(this._cache[key]);
 					return;
 				}
-				var uri = this.constructor.getApiUri(this[this.constructor.api_field], name);
-				model.api('GET', uri, function (status, response) {
+				model.api('GET', options.fallback, function (status, response) {
 					if (status !== 200) {
 						alert('Failed to fetch ' + name);
 						return;
@@ -710,6 +727,10 @@ Model.belongs_to = function (belongs_to) {
 			throw new Error('Invalid association: ' + name + ' is not defined');
 		}
 
+		if (!options.fallback) {
+			options.fallback = model.getApiUri(this.parent);
+		}
+
 		if (app.MODE === 'offline') {
 			selector._id = this.doc._parent;
 			return model.one(selector, options, callback);
@@ -717,8 +738,8 @@ Model.belongs_to = function (belongs_to) {
 			if (this._cache.parent) {
 				callback(this._cache.parent);
 				return;
-			}			
-			model.api('GET', model.getApiUri(this.parent), function (status, response) { // possible fail (.parent in online)
+			}
+			model.api('GET', function (status, response) { // possible fail (.parent in online)
 				if (status !== 200) {
 					callback(new model());
 					return;
@@ -751,18 +772,18 @@ Model.api = function (method, uri, params, data, callback) {
 	uri = uri.replace(new RegExp('./+', 'g'), function (a) {
 		return (a[0] === ':' && a.length > 2) ? '://' : a[0] + '/';
 	});
-	Object.getOwnPropertyNames(params).forEach(function (key, i) {
+	Object.keys(params).forEach(function (key, i) {
 		uri += (i === 0) ? '?' : '&';
 		uri += key + '=' + encodeURIComponent(params[key]);
 	});
 
-	Object.getOwnPropertyNames(data).forEach(function (key, i) {
-		data += (i !== 0) ? '&' : '';
-		data += key + '=' + encodeURIComponent(data[key]);
+	Object.keys(data).forEach(function (key, i) {
+		data_str += (i !== 0) ? '&' : '';
+		data_str += key + '=' + encodeURIComponent(data[key]);
 	});
 
 	xhr.open(method, uri, true);
-	Object.getOwnPropertyNames(headers).forEach(function (key) {
+	Object.keys(headers).forEach(function (key) {
 		xhr.setRequestHeader(key, headers[key]);
 	});
 	if ((method === 'POST' || method === 'PUT') && headers['content-type'] === undefined) {
