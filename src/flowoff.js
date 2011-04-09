@@ -151,6 +151,7 @@ app = {
 			});
 		}
 		this.MODE = mode;
+		this.ORIGINAL_MODE = mode;
 
 		if (mode === 'online') {
 			startup();
