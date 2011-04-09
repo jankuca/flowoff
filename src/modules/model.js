@@ -169,7 +169,7 @@ window.ApiOperation = Operation.inherit({
 	'startup': function (method, uri, data) {
 		var op = this;
 		Model.api(method, uri, {}, data, function (status, response) {
-			if (status < 300 || app.MODE !== 'offline') {
+			if ((status && status < 300) || app.MODE !== 'offline') {
 				op.output = [status, response];
 				op.shutdown();
 			} else {
