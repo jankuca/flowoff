@@ -456,6 +456,15 @@ Object.defineProperties(Model.prototype, {
 		get: function () {
 			return this.constructor.collection;
 		},
+		set: function () {
+		},
+	},
+	'key': {
+		get: function () {
+			return this.constructor.collection.replace(/ies$/, 'y').replace(/s$/, '');
+		},
+		set: function () {
+		},
 	},
 });
 
