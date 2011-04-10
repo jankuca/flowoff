@@ -340,9 +340,15 @@ Model = Function.inherit(function (doc) {
 			this.beforeSave();
 		}
 
+		var api_uri;
+		if (this.stored || !this.constructor._has_api_parent) {
+			api_uri = this.constructor.getApiUri(this.stored ? this[this.constructor.api_field] : undefined);
+		} else {
+			api_uri = window[this.constructor.parent_constructor].getApiUri(this.parent, this.key);
+		}
 		var op = new ApiOperation(
 			this.stored ? 'PUT' : 'POST',
-			this.constructor.getApiUri(this.stored ? this[this.constructor.api_field] : undefined),
+			api_uri,
 			this.doc
 		);
 
@@ -719,13 +725,14 @@ Model.has_many = function (has_many) {
 		createGetter(key, this.prototype, skip ? has_many[i + 1] : null);
 	}, this);
 };
-Model.belongs_to = function (belongs_to) {
-	if (belongs_to instanceof Array === true || arguments.length > 1) {
+Model.belongs_to = function (belongs_to, is_api_parent) {
+	if (belongs_to instanceof Array === true || (arguments.length > 1 && typeof is_api_parent !== 'boolean')) {
 		throw new Error('belongs_to: Multiple parents are not implemented');
 	}
 
 	var name = belongs_to.replace(/^\w/, upper);
 	this.parent_constructor = name;
+	this._has_api_parent = !!is_api_parent;
 	this.prototype.getParent = function (options, callback) {
 		if (arguments.length === 1) {
 			callback = arguments[0];
