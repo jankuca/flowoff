@@ -172,8 +172,10 @@ window.ApiOperation = Operation.inherit({
 			if ((status && status < 300) || app.MODE !== 'offline') {
 				op.output = [status, response];
 				op.shutdown();
-			} else {
+			} else if (status !== 404) { // unknown error
 				op.retry(5000);
+			} else { // items does not exist on the server; trash the operation
+				op.shutdown();
 			}
 		});
 	}
