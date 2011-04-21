@@ -375,7 +375,6 @@ Model = Function.inherit(function (doc) {
 		st.data = this.doc;
 
 		sql = st.sql;
-		console.log(sql);
 		execute = function (tx) {
 			tx.executeSql(sql[0], sql[1], function (tx, result) {
 				model.stored = true;
@@ -412,6 +411,20 @@ Model = Function.inherit(function (doc) {
 			this.beforeDelete();
 		}
 
+		var api_uri;
+		if (this.stored || !this.constructor._has_api_parent) {
+			api_uri = this.constructor.getApiUri(this.stored ? this[this.constructor.api_field] : undefined);
+		} else {
+			api_uri = window[this.constructor.parent_constructor].getApiUri(this.parent, this.key);
+		}
+		var op = new ApiOperation('DELETE', api_uri);
+		if (app.MODE === 'online') {
+			app.queue(op, function (status, response) {
+				callback(status < 300 ? null : new Error('Failed to delete the resource'));
+			});
+			return;
+		}
+
 		var st = new SQLStatement('delete', this.collection),
 			model = this,
 			selector = { _id: this.id };
@@ -430,6 +443,9 @@ Model = Function.inherit(function (doc) {
 				model.changed = true;
 
 				callback(null);
+				if (model.constructor.online !== false && options.online !== false) {
+					app.queue(op);
+				}
 			}, function (tx, err) {
 				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
 				console.log('The SQL query was:', sql[0], sql[1]);
@@ -781,6 +797,7 @@ Model.api = function (method, uri, params, data, callback) {
 		data = {};
 		params = arguments[2];
 	}
+	data = data || {}
 
 	var data_str = '',
 		xhr = new XMLHttpRequest(),
