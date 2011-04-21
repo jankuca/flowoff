@@ -550,11 +550,15 @@ Model.all = function (selector, options, callback) {
 				return;*/
 			}
 			if (options.limit === 1) {
-				callback(new M(response));
+				var m = new M(response);
+				m.remote = true;
+				callback(m);
 			} else {
 				var models = [];
 				response.forEach(function (item) {
-					models.push(new M(item));
+					var m = new M(item);
+					m.remote = true;
+					models.push(m);
 				});
 				callback(models);
 			}
@@ -656,6 +660,7 @@ Model.has_one = function (has_one) {
 
 			if (app.MODE === 'offline') {
 				selector._parent = this.id;
+				options.online = options.online || !!this.remote;
 				return model.one(selector, options, callback);
 			} else {
 				if (this._cache[key]) {
@@ -668,6 +673,7 @@ Model.has_one = function (has_one) {
 						return;
 					}
 					var m = new model(response);
+					m.remote = true;
 					this._cache[key] = m;
 					callback(m);
 				}.bind(this));
@@ -716,6 +722,7 @@ Model.has_many = function (has_many) {
 
 			if (app.MODE === 'offline') {
 				selector._parent = this.id;
+				options.online = options.online || !!this.remote;
 				return model.all(selector, options, callback);
 			} else {
 				if (this._cache[key]) {
@@ -729,7 +736,9 @@ Model.has_many = function (has_many) {
 					}
 					var models = [];
 					response.forEach(function (item) {
-						models.push(new model(item));
+						var m = new model(item);
+						m.remote = true;
+						models.push(m);
 					});
 					this._cache[key] = models;
 					callback(models);
@@ -774,6 +783,7 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 
 		if (app.MODE === 'offline') {
 			selector._id = this.doc._parent;
+			options.online = options.online || !!this.remote;
 			return model.one(selector, options, callback);
 		} else {
 			if (this._cache.parent) {
@@ -786,6 +796,7 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 					return;
 				}
 				var m = new model(response);
+				m.remote = true;
 				this._cache.parent = m;
 				callback(m);
 			}.bind(this));
