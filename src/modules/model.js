@@ -464,6 +464,13 @@ Model = Function.inherit(function (doc) {
 		this.id = uuid().replace(/\-/g, '');
 	},
 
+	'update': function (fields) {
+		Object.keys(fields).forEach(function (key) {
+			this[key] = fields[key];
+		}, this);
+		return this;
+	},
+
 	'updateTimestamp': function (key) {
 		var desc = Object.getOwnPropertyDescriptor(this, key);
 		if (desc === undefined) {
