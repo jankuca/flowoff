@@ -220,7 +220,7 @@ app = {
 			if (Controller === undefined) {
 				throw new Error('404 Page Not Found (Controller file missing)');
 			}
-			controller = new Controller();
+			controller = new Controller(route);
 
 			this.data.params = route.params;
 			route.params._c = route.controller;
