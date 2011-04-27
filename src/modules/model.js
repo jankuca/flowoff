@@ -362,8 +362,7 @@ Model = Function.inherit(function (doc) {
 		var st = new SQLStatement(this.stored ? 'update' : 'create', this.collection),
 			model = this,
 			selector = { _id: this.id },
-			data = {},
-			sql;
+			data = {};
 		if (this.constructor.namespace !== null) {
 			if (!app.namespace) {
 				throw new Error('Global namespace is not defined');
@@ -374,8 +373,8 @@ Model = Function.inherit(function (doc) {
 		st.selector = selector;
 		st.data = this.doc;
 
-		sql = st.sql;
-		execute = function (tx) {
+		var sql = st.sql;
+		var execute = function (tx) {
 			tx.executeSql(sql[0], sql[1], function (tx, result) {
 				model.stored = true;
 				model.changed = false;
@@ -436,8 +435,8 @@ Model = Function.inherit(function (doc) {
 		}
 		st.selector = selector;
 
-		sql = st.sql;
-		execute = function (tx) {
+		var sql = st.sql;
+		var execute = function (tx) {
 			tx.executeSql(sql[0], sql[1], function (tx, result) {
 				model.stored = false;
 				model.changed = true;
@@ -569,9 +568,7 @@ Model.all = function (selector, options, callback) {
 		return;
 	}
 
-	var st = new SQLStatement('read', this.collection),
-		sql,
-		execute;
+	var st = new SQLStatement('read', this.collection);
 
 	if (this.namespace !== null) {
 		if (!app.namespace) {
@@ -591,8 +588,8 @@ Model.all = function (selector, options, callback) {
 		st.sort = options.sort;
 	}
 
-	sql = st.sql;
-	execute = function (tx) {
+	var sql = st.sql;
+	var execute = function (tx) {
 		tx.executeSql(sql[0], sql[1], function (tx, result) {
 			var rows = result.rows,
 				r,
