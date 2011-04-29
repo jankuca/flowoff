@@ -347,11 +347,39 @@ app = {
 
 				for (r = 0; r < rr; ++r) {
 					var row = rows.item(r),
+						key = (row.key.search('.') === -1) ? row.key : row.key.split('.')[1],
 						val = row.value.toString();
-					state[row.key] = val.match(/^[0-9]+$/) ? parseInt(val, 10) : val;
+					state[key] = val.match(/^[0-9]+$/) ? Number(val) : val;
 				}
 
 				callback(state);
+			});
+		});
+	},
+
+	'setState': function (key, value, callback) {
+		if (typeof arguments[2] === 'function') {
+			callback = arguments[2];
+			tx = undefined;
+		}
+		if (this.MODE !== 'offline') {
+			callback();
+			return;
+		}
+		if (!app.namespace) {
+			throw new Error('Global namespace is not defined');
+		}
+		key = app.namespace + '.' + key;
+
+		this.db.transaction(function (tx) {
+			tx.executeSql("UPDATE [_state] SET [value] = ? WHERE [key] = ?", [value, key], function (tx, result) {
+				if (result.rowsAffected !== 0) {
+					callback();
+				} else {
+					tx.executeSql("INSERT INTO [_state] ([key], [value]) VALUES (?, ?)", [key, value], function (tx, result) {
+						callback();
+					});
+				}
 			});
 		});
 	},
