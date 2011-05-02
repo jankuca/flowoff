@@ -350,8 +350,16 @@ app = {
 
 				for (r = 0; r < rr; ++r) {
 					var row = rows.item(r),
-						key = (row.key.search('.') === -1) ? row.key : row.key.split('.')[1],
-						val = row.value.toString();
+						val = row.value.toString(),
+						key = row.key;
+					var ns;
+					if (key.search('.') !== -1) {
+						ns = key.split('.')[0];
+						if (ns !== app.namespace) {
+							break;
+						}
+						key = row.key.split('.')[1];
+					}
 					state[key] = val.match(/^[0-9]+$/) ? Number(val) : val;
 				}
 
@@ -361,10 +369,6 @@ app = {
 	},
 
 	'setState': function (key, value, callback) {
-		if (typeof arguments[2] === 'function') {
-			callback = arguments[2];
-			tx = undefined;
-		}
 		if (this.MODE !== 'offline') {
 			callback();
 			return;
