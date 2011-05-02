@@ -395,6 +395,10 @@ app = {
 		this._queue.push(op, callback);
 	},
 
+	'getQueue': function () {
+		return this._queue;
+	},
+
 	'_dbMigrate': function (last_migration, callback) {
 		if (this._migrations === undefined) {
 			app._boot_error_handler.handle('MIGRATION_FAILED');
