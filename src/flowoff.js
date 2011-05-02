@@ -337,6 +337,9 @@ app = {
 			callback(null);
 			return;
 		}
+		if (!app.namespace) {
+			throw new Error('Global namespace is not defined.');
+		}
 
 		this.db.transaction(function (tx) {
 			tx.executeSql("SELECT [key], [value] FROM [_state]", [], function (tx, result) {
