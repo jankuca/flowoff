@@ -245,7 +245,7 @@ Model = Function.inherit(function (doc) {
 				if (typeof this.getParent !== 'function') {
 					throw new Error('No parent association');
 				}
-				orig = doc._parent;
+				var orig = doc._parent;
 				doc._parent = (value instanceof Model) ? value[app.MODE === 'offline' ? 'id' : value.constructor.api_field] : value;
 				if (app.MODE !== 'offline') {
 					this._cache.parent = (value instanceof Model) ? value : undefined;
