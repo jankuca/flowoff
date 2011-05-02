@@ -79,4 +79,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 			}
 		}, 1000);
 	},
+	'filter': function () {
+		this._items = Array.prototype.filter.apply(this._items, arguments);
+	},
 });
