@@ -80,7 +80,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 			} catch (exc) {
 				queue._loop();
 			}
-		}, 1000);
+		}, 0);
 	},
 	'filter': function () {
 		this.items = Array.prototype.filter.apply(this.items, arguments);
