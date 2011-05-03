@@ -16,7 +16,7 @@ var Operation = Function.inherit(function () {
 	},
 
 	'retry': function (delay) {
-		console.log('retry in 5s');
+		this.queue.fire('idle');
 		setTimeout(this.execute.bind(this), delay || 0);
 	},
 
@@ -57,6 +57,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 		var queue = this;
 		this.idle = !this.items.length;
 		if (this.idle) {
+			queue.fire('idle');
 			return;
 		}
 
@@ -75,6 +76,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 					}
 					queue._loop();
 				});
+				queue.fire('item');
 			} catch (exc) {
 				queue._loop();
 			}
