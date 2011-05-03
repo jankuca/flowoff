@@ -30,20 +30,21 @@ var Operation = Function.inherit(function () {
 
 var OperationQueue = Function.inherit(function (namespace) {
 	this._namespace = namespace;
-	this._items = [];
+	this.items = [];
 	this._items_simple = JSON.parse(window.localStorage[namespace] || '[]');
 
 	this._items_simple.forEach(function (item) {
 		var name = item[0].match(/^\[object ([A-Z]\w*)\]$/)[1],
 			op = new window[name]();
 		op.input = item.slice(1);
-		this._items.push([op]);
+		this.items.push([op]);
 	}, this);
 
 	this._loop();
 }, {
 	'push': function (op, callback) {
-		this._items.push(typeof callback === 'function' ? [op, callback] : [op]);
+		this.items.push(typeof callback === 'function' ? [op, callback] : [op]);
+		op.queue = this;
 		if (this._namespace) {
 			this._items_simple.push([op.toString()].concat(op.input));
 			window.localStorage[this._namespace] = JSON.stringify(this._items_simple);
@@ -54,13 +55,13 @@ var OperationQueue = Function.inherit(function (namespace) {
 	},
 	'_loop': function () {
 		var queue = this;
-		this.idle = !this._items.length;
+		this.idle = !this.items.length;
 		if (this.idle) {
 			return;
 		}
 
 		setTimeout(function () {
-			var item = queue._items[0];
+			var item = queue.items[0];
 			queue._current_item = item;
 			try {
 				item[0].execute(function () {
@@ -68,7 +69,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 						queue._items_simple.shift();
 						window.localStorage[queue._namespace] = JSON.stringify(queue._items_simple);
 					}
-					queue._items.shift();
+					queue.items.shift();
 					if (typeof item[1] === 'function') {
 						item[1].apply(this, queue.output || []);
 					}
@@ -80,6 +81,6 @@ var OperationQueue = Function.inherit(function (namespace) {
 		}, 1000);
 	},
 	'filter': function () {
-		this._items = Array.prototype.filter.apply(this._items, arguments);
+		this.items = Array.prototype.filter.apply(this.items, arguments);
 	},
 });
