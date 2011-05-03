@@ -356,7 +356,7 @@ app = {
 					if (key.search('.') !== -1) {
 						ns = key.split('.')[0];
 						if (ns !== app.namespace) {
-							break;
+							continue;
 						}
 						key = row.key.split('.')[1];
 					}
