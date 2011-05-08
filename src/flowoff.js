@@ -290,6 +290,9 @@ app = {
 		this._components[key] = Component;
 		return Component;
 	},
+	'getComponent': function (key) {
+		return this._components[key] || null;
+	},
 
 	'component': function (key, vars) {
 		if (this._components[key] === undefined) {
