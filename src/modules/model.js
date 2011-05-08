@@ -283,7 +283,7 @@ Model = Function.inherit(function (doc) {
 	}, this);
 
 	// parent
-	if (typeof doc._parent === 'object') {
+	if (typeof doc._parent === 'object' && doc._parent !== null) {
 		if (app.MODE !== 'offline') {
 			this._cache.parent = new window[this.constructor.parent_constructor](doc._parent);
 		}
