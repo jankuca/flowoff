@@ -587,6 +587,8 @@ Model.all = function (selector, options, callback) {
 	}
 	if (options.sort) {
 		st.sort = options.sort;
+	} else if (this.sort) {
+		st.sort = this.sort;
 	}
 
 	var sql = st.sql;
