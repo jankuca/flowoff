@@ -37,6 +37,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 		var name = item[0].match(/^\[object ([A-Z]\w*)\]$/)[1],
 			op = new window[name]();
 		op.input = item.slice(1);
+		op.queue = this;
 		this.items.push([op]);
 	}, this);
 
