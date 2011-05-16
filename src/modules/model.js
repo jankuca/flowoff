@@ -185,7 +185,11 @@ window.ApiOperation = Operation.inherit({
 Model = Function.inherit(function (doc) {
 	var d = doc || {};
 	doc = {};
+	var skip_props = ['url'];
 	Object.getOwnPropertyNames(d).forEach(function (key) {
+		if (skip_props.indexOf(key) !== -1) {
+			return;
+		}
 		Object.defineProperty(doc, key, Object.getOwnPropertyDescriptor(d, key));
 	});
 
