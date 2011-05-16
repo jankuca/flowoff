@@ -379,14 +379,34 @@ Model = Function.inherit(function (doc) {
 		st.data = this.doc;
 
 		var sql = st.sql;
+		var after_upsert = (options.upsert === true);
 		var execute = function (tx) {
 			tx.executeSql(sql[0], sql[1], function (tx, result) {
-				model.stored = true;
-				model.changed = false;
+				if (result.rowsAffected > 0) {
+					model.stored = true;
+					model.changed = false;
 
-				callback(null);
-				if (model.constructor.online !== false && options.online !== false) {
-					app.queue(op);
+					callback(null);
+					if (model.constructor.online !== false && options.online !== false) {
+						app.queue(op);
+					}
+				} else if (!after_upsert) { // upsert
+					after_upsert = true;
+
+					var st = new SQLStatement('create', model.collection);
+					st.selector = selector;
+					st.data = model.doc;
+					sql = st.sql;
+
+					if (options.tx) {
+						execute(options.tx);
+					} else {
+						app.db.transaction(execute);
+					}
+				} else {
+					if (model.constructor.online !== false && options.online !== false) {
+						app.queue(op);
+					}
 				}
 			}, function (tx, err) {
 				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
