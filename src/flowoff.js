@@ -111,7 +111,7 @@ app = {
 			}
 
 			/* 6) Operation queue */
-			app._queue = new OperationQueue('_queue');
+			app._queue = null;
 		};
 
 		var mode = 'online';
@@ -397,7 +397,6 @@ app = {
 	'queue': function (op, callback) {
 		this._queue.push(op, callback);
 	},
-
 	'getQueue': function () {
 		return this._queue;
 	},
@@ -447,6 +446,9 @@ app = {
 		m_iter();
 	}
 };
+
+var namespace = null;
+
 Object.defineProperties(app, {
 	'data': {
 		'value': {
@@ -457,8 +459,14 @@ Object.defineProperties(app, {
 		'enumerable': true,
 	},
 	'namespace': {
-		'value': null,
-		'writable': true,
+		'get': function () {
+			return namespace;
+		},
+		'set': function (val) {
+			namespace = val;
+			this._queue = new OperationQueue(val);
+			app.fire('queueset');
+		},
 	},
 	'router': {
 		'value': new Router(),
