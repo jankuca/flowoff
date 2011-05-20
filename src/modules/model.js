@@ -333,6 +333,8 @@ Model = Function.inherit(function (doc) {
 		if (arguments.length === 1) {
 			callback = arguments[0];
 			options = {};
+		} else if (arguments.length === 0) {
+			options = {};
 		}
 
 		if (!this.changed) {
@@ -359,7 +361,9 @@ Model = Function.inherit(function (doc) {
 
 		if (app.MODE === 'online') {
 			app.queue(op, function (status, response) {
-				callback(status < 300 ? null : new Error('Failed to save the resource'));
+				if (typeof callback === 'function') {
+					callback(status < 300 ? null : new Error('Failed to save the resource'));
+				}
 			});
 			return;
 		}
@@ -386,7 +390,9 @@ Model = Function.inherit(function (doc) {
 					model.stored = true;
 					model.changed = false;
 
-					callback(null);
+					if (typeof callback === 'function') {
+						callback(null);
+					}
 					if (model.constructor.online !== false && options.online !== false) {
 						app.queue(op);
 					}
@@ -411,7 +417,9 @@ Model = Function.inherit(function (doc) {
 			}, function (tx, err) {
 				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
 				console.log('The SQL query was:', sql[0], sql[1]);
-				callback(err);
+				if (typeof callback === 'function') {
+					callback(err);
+				}
 			});
 		};
 
@@ -425,6 +433,8 @@ Model = Function.inherit(function (doc) {
 	'remove': function (options, callback) {
 		if (arguments.length === 1) {
 			callback = arguments[0];
+			options = {};
+		} else if (arguments.length === 0) {
 			options = {};
 		}
 
@@ -444,7 +454,9 @@ Model = Function.inherit(function (doc) {
 		var op = new ApiOperation('DELETE', api_uri);
 		if (app.MODE === 'online') {
 			app.queue(op, function (status, response) {
-				callback(status < 300 ? null : new Error('Failed to delete the resource'));
+				if (typeof callback === 'function') {
+					callback(status < 300 ? null : new Error('Failed to delete the resource'));
+				}
 			});
 			return;
 		}
@@ -466,14 +478,18 @@ Model = Function.inherit(function (doc) {
 				model.stored = false;
 				model.changed = true;
 
-				callback(null);
+				if (typeof callback === 'function') {
+					callback(null);
+				}
 				if (model.constructor.online !== false && options.online !== false) {
 					app.queue(op);
 				}
 			}, function (tx, err) {
 				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
 				console.log('The SQL query was:', sql[0], sql[1]);
-				callback(err);
+				if (typeof callback === 'function') {
+					callback(err);
+				}
 			});
 		};
 
