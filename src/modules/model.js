@@ -538,12 +538,12 @@ Model.one = function (selector, options, callback) {
 };
 Model.all = function (selector, options, callback) {
 	if (arguments.length === 1) {
-		selector = {};
-		options = {};
 		callback = arguments[0];
-	} else if (arguments.length === 2) {
 		options = {};
+		selector = {};
+	} else if (arguments.length === 2) {
 		callback = arguments[1];
+		options = {};
 	}
 	selector = selector || {};
 	options = options || {};
