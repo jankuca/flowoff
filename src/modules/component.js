@@ -112,9 +112,24 @@ var Component = Function.inherit(function () {
 	},
 	'rerender': function (key, not_rendered_only) {
 		if (!this.element) {
-			throw 'Invalid state: Cannot rerender components in an unrendered component';
+			return;
 		}
 
+		if (arguments.length === 0) { // rerender the whole component
+			var el = this.element;
+
+			if (typeof this.beforeRender === 'function') {
+				this.beforeRender();
+			}
+			el.insert({ after: this.render() });
+			el.remove();
+			if (typeof this.afterRender === 'function') {
+				this.afterRender();
+			}
+			return;
+		}
+
+		// rerender only a section of the component
 		var placeholder;
 		var element_key = this.element.attr('components');
 		if (element_key !== null && element_key === key) {
