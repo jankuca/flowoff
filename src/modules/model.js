@@ -739,6 +739,7 @@ Model.has_many = function (has_many) {
 	var createGetter = function (name, proto, sel) {
 		var key = name;
 		name = name.replace(/^\w/, upper);
+		sel = sel || {};
 		proto['get' + name] = function (options, callback) {
 			if (arguments.length === 1) {
 				callback = arguments[0];
@@ -751,20 +752,16 @@ Model.has_many = function (has_many) {
 			if (model === undefined) {
 				throw new Error('Invalid association: ' + name + ' is not defined');
 			}
-			if (sel) {
-				Object.getOwnPropertyNames(sel).forEach(function (key) {
-					selector[key] = sel[key];
-				});
-			}
+			Object.getOwnPropertyNames(sel).forEach(function (key) {
+				selector[key] = sel[key];
+			});
 
 			if (!options.fallback) {
 				options.fallback = this.constructor.getApiUri(this[this.constructor.api_field], name);
 			}
 
 			if (app.MODE === 'offline') {
-				if (!sel) {
-					selector._parent = this.id;
-				}
+				selector._parent = this.id;
 				options.online = options.online || !!this.remote;
 				return model.all(selector, options, callback);
 			} else {
