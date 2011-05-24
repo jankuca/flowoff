@@ -243,7 +243,7 @@ Model = Function.inherit(function (doc) {
 				if (typeof this.getParent !== 'function') {
 					throw new Error('No parent association');
 				}
-				return doc._parent || null;
+				return doc._parent._id || doc._parent || null;
 			},
 			set: function (value) {
 				if (typeof this.getParent !== 'function') {
@@ -291,7 +291,6 @@ Model = Function.inherit(function (doc) {
 		if (app.MODE !== 'offline') {
 			this._cache.parent = new window[this.constructor.parent_constructor](doc._parent);
 		}
-		this.parent = this._cache.parent;
 	}
 
 	// children
@@ -822,7 +821,7 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 		}
 
 		if (app.MODE === 'offline') {
-			selector._id = this.doc._parent;
+			selector._id = this.parent;
 			options.online = options.online || !!this.remote;
 			return model.one(selector, options, callback);
 		} else {
