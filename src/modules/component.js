@@ -181,4 +181,9 @@ var Component = Function.inherit(function () {
 
 window.Component = Component;
 
+
+EJS.Helpers.prototype.lang = function (key) {
+	return app.lang(key, this._data);
+};
+
 })();

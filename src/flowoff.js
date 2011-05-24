@@ -322,9 +322,10 @@ app = {
 		
 		var lang = this._lang[key];
 		if (params !== undefined) {
-			Object.getOwnPropertyNames(params).forEach(function (key) {
-				lang = lang.replace('{$' + key + '}', params[key]);
+			var ejs = new EJS({
+				'text': lang,
 			});
+			lang = ejs.render(params);
 		}
 		return lang;
 	},
