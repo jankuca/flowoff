@@ -682,7 +682,6 @@ Model.has_one = function (has_one) {
 				options = {};
 				callback = arguments[0];
 			}
-			console.log(key);
 
 			var model = window[name],
 				selector = {};
