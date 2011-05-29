@@ -78,7 +78,7 @@ app = {
 		
 		window.addEventListener('flowoff:callend', function () {
 			app.data.viewReady = true;
-		});
+		}, false);
 
 		var startup = function () {
 			if (typeof callback === 'function') {
@@ -100,7 +100,7 @@ app = {
 					if (app.data.hash !== l.hash) {
 						app.call(l.hash);
 					}
-				});
+				}, false);
 			} else {
 				setInterval(function () {
 					if (l.hash !== this.data.hash) {

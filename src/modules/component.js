@@ -13,8 +13,8 @@ var fn_dynamicLink = function (event) {
 };
 var makeLinksDynamic = function (el) {
 	el.find('a[href]').forEach(function (a) {
-		a.removeEventListener('click', fn_dynamicLink);
-		a.addEventListener('click', fn_dynamicLink);
+		a.removeEventListener('click', fn_dynamicLink, false);
+		a.addEventListener('click', fn_dynamicLink, false);
 	});
 };
 
