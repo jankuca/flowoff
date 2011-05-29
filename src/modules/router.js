@@ -60,7 +60,7 @@ var Router = Function.inherit(function () {
 				key;
 
 			
-			Object.getOwnPropertyNames(route[2]).forEach(function (key) {
+			Object.keys(route[2]).forEach(function (key) {
 				options[key] = route[2][key];
 			});
 			rules = options.params;
@@ -92,7 +92,7 @@ var Router = Function.inherit(function () {
 					params[key] = match[i + 1];
 				});
 			} else {
-				if (Object.getOwnPropertyNames(rules).some(function (key) {
+				if (Object.keys(rules).some(function (key) {
 					var index = param_keys.indexOf(key);
 					if (index > -1) {
 						if (!rules[key].test(match[index + 1])) {
@@ -124,7 +124,7 @@ var Router = Function.inherit(function () {
 			// query string
 			if (!!qs) {
 				if (rules instanceof RegExp) {
-					if (Object.getOwnPropertyNames(query).some(function (key) {
+					if (Object.keys(query).some(function (key) {
 						if (!rules.test(query[key])) {
 							return true;
 						}
@@ -133,7 +133,7 @@ var Router = Function.inherit(function () {
 						return;
 					}
 				} else if (rules === undefined) {
-					Object.getOwnPropertyNames(query).forEach(function (key) {
+					Object.keys(query).forEach(function (key) {
 						params[key] = query[key];
 					});
 				} else {
@@ -165,7 +165,7 @@ var Router = Function.inherit(function () {
 		
 		var create_qs = function (params, param_keys) {
 			var query = [];
-			Object.getOwnPropertyNames(params).forEach(function (key) {
+			Object.keys(params).forEach(function (key) {
 				if (['_c', '_v'].indexOf(key) === -1 && param_keys.indexOf(key) === -1) {
 					query.push(key + '=' + encodeURIComponent(params[key]));
 				}
