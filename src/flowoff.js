@@ -300,7 +300,7 @@ app = {
 		}
 
 		var component = new this._components[key]();
-		component.name = key;
+		component.NAME = key;
 		if (component instanceof Component !== true) {
 			throw new Error('The registered object is not a component (' + key + ')');
 		}

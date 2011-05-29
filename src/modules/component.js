@@ -27,7 +27,7 @@ var Component = Function.inherit(function () {
 	this.data = {
 		'component': this
 	};
-	this.name = this.constructor.prototype.name;
+	this.NAME = this.constructor.prototype.NAME;
 
 	Object.defineProperty(this, 'rendered', {
 		get: function () {
