@@ -137,8 +137,8 @@ var Router = Function.inherit(function () {
 						params[key] = query[key];
 					});
 				} else {
-					if (Object.getOwnPropertyNames(query).some(function (key) {
-						if (!rules.hasOwnProperty(key) || !rules[key].test(query[key])) {
+					if (Object.keys(query).some(function (key) {
+						if (rules.hasOwnProperty(key) && !rules[key].test(query[key])) {
 							return true;
 						}
 						params[key] = query[key];
