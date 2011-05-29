@@ -85,7 +85,7 @@ Object.defineProperty(SQLStatement.prototype, 'sql', {
 			if (JSON.stringify(sort) !== '{}') {
 				out += "ORDER BY ";
 				Object.getOwnPropertyNames(sort).forEach(function (field) {
-					out += "[" + field.replace(':', '__') + "] " + (sort[field] > 0 ? "ASC " : "DESC ");
+					out += "lower([" + field.replace(':', '__') + "]) " + (sort[field] > 0 ? "ASC " : "DESC ");
 				});
 			}
 
