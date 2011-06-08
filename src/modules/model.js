@@ -886,14 +886,22 @@ Model.api = function (method, uri, params, data, callback) {
 			try {
 				json = JSON.parse(this.responseText);
 			} catch (exc) {
-				callback(this.status, this.responseText ? { 'data': this.responseText } : null, this);
+				callback(Model.getStdStatus(this.status), this.responseText ? { 'data': this.responseText } : null, this);
 			}
 			if (json) {
-				callback(this.status, json, this);
+				callback(Model.getStdStatus(this.status), json, this);
 			}
 		}
 	};
 	xhr.send(data_str || null);
+};
+
+Model.getStdStatus = function (status) {
+	status = Number(status);
+	switch (status) {
+	case 1223: return 204;
+	default: return status;
+	}
 };
 
 Model.getApiUri = function (id, assoc) {
