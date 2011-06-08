@@ -575,7 +575,18 @@ Model.all = function (selector, options, callback) {
 	var fallback = function () {
 		var uri = options.fallback;
 		if (!uri) {
-			uri = (options.limit === 1) ? M.getApiUri(selector[M.api_field.replace(/^id$/, '_id')]) : M.getApiUri();
+			var api_field = M.api_field.replace(/^id$/, '_id');
+			uri = (options.limit === 1) ? M.getApiUri(selector[api_field]) : M.getApiUri();
+			var query = [];
+			Object.keys(selector).forEach(function (key) {
+				var k = key.replace(/^_id$/, 'id')
+				if (key !== api_field) {
+					query.push(k + '=' + encodeURIComponent(selector[key]));
+				}
+			});
+			if (query.length) {
+				uri += '?' + query.join('&');
+			}
 		}
 		M.api('GET', uri, function (status, response) {
 			if (status !== 200) {
