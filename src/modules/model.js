@@ -591,20 +591,16 @@ Model.all = function (selector, options, callback) {
 		M.api('GET', uri, function (status, response) {
 			if (status !== 200) {
 				return callback(options.limit !== 1 ? [] : new M());
-				/*if (options.limit === 1) {
-					callback(new M());
-				} else {
-					callb
-					alert('Failed to fetch ' + M.collection);
-				}
-				return;*/
 			}
 			if (options.limit === 1) {
-				var m = new M(response);
+				var m = new M(response instanceof Array ? response[0] : response);
 				m.remote = true;
 				callback(m);
 			} else {
 				var models = [];
+				if (response instanceof Array === false) {
+					response = [response];
+				}
 				response.forEach(function (item) {
 					var m = new M(item);
 					m.remote = true;
