@@ -889,6 +889,11 @@ Model.api = function (method, uri, params, data, callback) {
 	}
 	xhr.onreadystatechange = function () {
 		if (this.readyState === 4) {
+			if (this.status === 401) {
+				window.document.sessionexpired = true;
+				window.document.fire('flowoff:sessionexpire');
+			}
+
 			var json;
 			try {
 				json = JSON.parse(this.responseText);
