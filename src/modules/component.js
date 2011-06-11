@@ -179,7 +179,21 @@ var Component = Function.inherit(function () {
 	}
 });
 
+var RootComponent = Component.inherit(function (element) {
+	this.NAME = '$root';
+	this.element = element;
+	this.element.attr('components', 'components');
+}, {
+	'attach': function (component) {
+		return Component.prototype.attach.call(this, 'components', component);
+	},
+	'rerender': function () {
+		return Component.prototype.rerender.call(this, 'components');
+	},
+});
+
 window.Component = Component;
+window.RootComponent = RootComponent;
 
 
 EJS.Helpers.prototype.lang = function (key) {
