@@ -851,7 +851,7 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 				callback(this._cache.parent);
 				return;
 			}
-			model.api('GET', function (status, response) { // possible fail (.parent in online)
+			model.api('GET', options.fallback, function (status, response) {
 				if (status !== 200) {
 					callback(new model());
 					return;
