@@ -684,14 +684,19 @@ Model.has_one = function (has_one) {
 		var key = name;
 		name = name.replace(/^\w/, upper);
 		sel = sel || {};
-		proto['get' + name] = function (options, callback) {
+		proto['get' + name] = function (selector, options, callback) {
+			if (arguments.length === 2) {
+				callback = arguments[1];
+				options = arguments[0];
+				selector = {};
+			}
 			if (arguments.length === 1) {
-				options = {};
 				callback = arguments[0];
+				options = {};
+				selector = {};
 			}
 
-			var model = window[name],
-				selector = {};
+			var model = window[name];
 			if (model === undefined) {
 				throw new Error('Invalid association: ' + name + ' is not defined');
 			}
@@ -745,15 +750,20 @@ Model.has_many = function (has_many) {
 		var key = name;
 		name = name.replace(/^\w/, upper);
 		sel = sel || {};
-		proto['get' + name] = function (options, callback) {
+		proto['get' + name] = function (selector, options, callback) {
+			if (arguments.length === 2) {
+				callback = arguments[1];
+				options = arguments[0];
+				selector = {};
+			}
 			if (arguments.length === 1) {
 				callback = arguments[0];
 				options = {};
+				selector = {};
 			}
 			name = name.replace(/ies$/, 'y').replace(/s$/, '');
 
-			var model = window[name],
-				selector = {};
+			var model = window[name];
 			if (model === undefined) {
 				throw new Error('Invalid association: ' + name + ' is not defined');
 			}
@@ -810,14 +820,19 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 	var name = belongs_to.replace(/^\w/, upper);
 	this.parent_constructor = name;
 	this._has_api_parent = !!is_api_parent;
-	this.prototype.getParent = function (options, callback) {
+	this.prototype.getParent = function (selector, options, callback) {
+		if (arguments.length === 2) {
+			callback = arguments[1];
+			options = arguments[0];
+			selector = {};
+		}
 		if (arguments.length === 1) {
 			callback = arguments[0];
 			options = {};
+			selector = {};
 		}
 
-		var model = window[name],
-			selector = {};
+		var model = window[name];
 		if (model === undefined) {
 			throw new Error('Invalid association: ' + name + ' is not defined');
 		}
