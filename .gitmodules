@@ -7,3 +7,6 @@
 [submodule "lib/uuid"]
 	path = lib/uuid
 	url = git://gist.github.com/789412.git
+[submodule "lib/utils"]
+	path = lib/utils
+	url = git://gist.github.com/871775.git
