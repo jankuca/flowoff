@@ -89,6 +89,9 @@ app = {
 			if (app._cfg.erase) {
 				document.body.html(null);
 			}
+
+			/* 3b) Component tree root */
+			app.tree = new RootComponent(app.get('tree_root') || document.body);
 			
 			/* 4) CALL */
 			app.call(l.hash);
