@@ -283,6 +283,7 @@ Model = Function.inherit(function (doc) {
 		Object.defineProperty(this, key, {
 			get: fieldGetter.bind(this, key),
 			set: fieldSetter.bind(this, key),
+			enumerable: true,
 		});
 	}, this);
 
