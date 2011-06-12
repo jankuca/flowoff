@@ -348,7 +348,9 @@ Model = Function.inherit(function (doc) {
 		}
 
 		var api_uri;
-		if (this.stored || !this.constructor._has_api_parent) {
+		if (options.fallback) {
+			api_uri = options.fallback;
+		} else if (this.stored || !this.constructor._has_api_parent) {
 			api_uri = this.constructor.getApiUri(this.stored ? this[this.constructor.api_field] : undefined);
 		} else {
 			api_uri = window[this.constructor.parent_constructor].getApiUri(this.parent, this.key);
@@ -362,7 +364,7 @@ Model = Function.inherit(function (doc) {
 		if (app.MODE === 'online') {
 			app.queue(op, function (status, response) {
 				if (typeof callback === 'function') {
-					callback(status < 300 ? null : new Error('Failed to save the resource'));
+					callback(status < 300 ? response : new Error('Failed to save the resource'));
 				}
 			});
 			return;
@@ -446,7 +448,9 @@ Model = Function.inherit(function (doc) {
 		}
 
 		var api_uri;
-		if (this.stored || !this.constructor._has_api_parent) {
+		if (options.fallback) {
+			api_uri = options.fallback;
+		} else if (this.stored || !this.constructor._has_api_parent) {
 			api_uri = this.constructor.getApiUri(this.stored ? this[this.constructor.api_field] : undefined);
 		} else {
 			api_uri = window[this.constructor.parent_constructor].getApiUri(this.parent, this.key);
@@ -455,7 +459,7 @@ Model = Function.inherit(function (doc) {
 		if (app.MODE === 'online') {
 			app.queue(op, function (status, response) {
 				if (typeof callback === 'function') {
-					callback(status < 300 ? null : new Error('Failed to delete the resource'));
+					callback(status < 300 ? response : new Error('Failed to delete the resource'));
 				}
 			});
 			return;
