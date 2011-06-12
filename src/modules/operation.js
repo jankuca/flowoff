@@ -73,7 +73,7 @@ var OperationQueue = Function.inherit(function (namespace) {
 					}
 					queue.items.shift();
 					if (typeof item[1] === 'function') {
-						item[1].apply(this, queue.output || []);
+						item[1].apply(this, item[0].output || []);
 					}
 					queue._loop();
 				});
