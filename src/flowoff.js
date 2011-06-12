@@ -93,10 +93,7 @@ app = {
 			/* 3b) Component tree root */
 			app.tree = new RootComponent(app.get('tree_root') || document.body);
 			
-			/* 4) CALL */
-			app.call(l.hash);
-			
-			/* 5) Set up hashchange checking */
+			/* 4) Set up hashchange checking */
 			app.data.hash = l.hash;
 			if ('onhashchange' in window) {
 				window.addEventListener('hashchange', function () {
@@ -113,8 +110,13 @@ app = {
 				}, 50);
 			}
 
-			/* 6) Operation queue */
-			app._queue = null;
+			/* 5) Operation queue */
+			if (app._queue instanceof OperationQueue === false) {
+				app._queue = null;
+			}
+
+			/* 6) CALL */
+			app.call(l.hash);
 		};
 
 		var mode = 'online';
