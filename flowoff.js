@@ -17,9 +17,13 @@ window.FlowOff = {
 				'src/modules/component.js',
 				'src/modules/form.js',
 				'src/flowoff.js',
-				callback
+				function () {
+					require.ROOT = old_root;
+					if (typeof callback === 'function') {
+						callback();
+					}
+				}
 			);
-			require.ROOT = old_root;
 		}
 
 		if (Function.prototype.inherit === void 0) {
