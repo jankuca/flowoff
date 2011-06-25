@@ -308,7 +308,7 @@ Model = Function.inherit(function (doc) {
 				cache = [];
 				doc[key].forEach(function (doc) {
 					var m = new model(doc);
-					if (app.MODE !== 'offline') {
+					if (app.MODE !== 'offline' && !doc._parent) {
 						m._cache._parent = this;
 						m.doc._parent = this.id;
 					}
@@ -316,7 +316,7 @@ Model = Function.inherit(function (doc) {
 				}, this);
 			} else {
 				cache = new model(doc[key]);
-				if (app.MODE !== 'offline') {
+				if (app.MODE !== 'offline' && !doc[key]._parent) {
 					cache._cache.parent = this;
 					m.doc._parent = this.id;
 				}
