@@ -363,17 +363,25 @@ Model = Function.inherit(function (doc) {
 			this.doc
 		);
 
+		var model = this;
+
 		if (app.MODE === 'online') {
 			app.queue(op, function (status, response) {
-				if (typeof callback === 'function') {
-					callback(status < 300 ? response : new Error('Failed to save the resource'));
+				if (status < 300) {
+					model.stored = true;
+					if (typeof callback === 'function') {
+						callback(response);
+					}
+				} else {
+					if (typeof callback === 'function') {
+						callback(new Error('Failed to save the resource'));
+					}
 				}
 			});
 			return;
 		}
 
 		var st = new SQLStatement(this.stored ? 'update' : 'create', this.collection),
-			model = this,
 			selector = { _id: this.id },
 			data = {};
 		if (this.constructor.namespace !== null) {
