@@ -879,6 +879,68 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 	};
 };
 
+Model.search = function (field, q, options, callback) {
+	if (arguments.length === 3 && typeof arguments[2] === 'function') {
+		callback = arguments[2];
+		options = {};
+	}
+
+	field = 'lower([' + field.replace(':', '__') + '])';
+	var sql = this._getSearchSQL(field, q);
+	var M = this;
+	var execute = function (tx) {
+		tx.executeSql(sql[0], sql[1], function (tx, result) {
+			var rows = result.rows, row;
+			var r, rr = rows.length;
+			var models = [];
+			var doc;
+			if (rr !== 0) {
+				for (r = 0; r < rr; ++r) {
+					doc = {};
+					row = rows.item(r);
+					Object.getOwnPropertyNames(row).forEach(function (key) {
+						doc[key.replace('__', ':')] = row[key];
+					});
+					models.push(new M(doc));
+				}
+				callback(options.limit !== 1 ? models : models[0] || new M());
+			} else {
+				callback(options.limit !== 1 ? [] : new M());
+			}
+		}, function (tx, err) {
+			console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
+			console.log('The SQL query was:', sql[0], sql[1]);
+			callback(err);
+		});
+	};
+
+	if (options.tx) {
+		execute(options.tx);
+	} else {
+		app.db.transaction(execute);
+	}
+};
+
+Model._getSearchSQL = function (field, q) {
+	var sql =
+		"SELECT * " +
+		"FROM [" + this.collection + "] " +
+		"WHERE [_ns] = ? ";
+	var params = [
+		app.namespace
+	];
+	q.forEach(function (word) {
+		sql += "AND ( " +
+			field + " LIKE ? OR " +
+			field + " LIKE ? " +
+		") ";
+		params.push(word + "%");
+		params.push("% " + word + "%");
+	});
+
+	return [sql, params];
+};
+
 /*arguments method, uri, [params, [data]], callback*/
 Model.api = function (method, uri, params, data, callback) {
 	if (arguments.length === 3) {
