@@ -594,6 +594,9 @@ Model.all = function (selector, options, callback) {
 			uri = (options.limit === 1) ? M.getApiUri(selector[api_field]) : M.getApiUri();
 			var query = [];
 			Object.keys(selector).forEach(function (key) {
+				if (key === '_ns') {
+					return;
+				}
 				var k = key.replace(/^_id$/, 'id')
 				if (key !== api_field) {
 					query.push(k + '=' + encodeURIComponent(selector[key]));
