@@ -728,7 +728,7 @@ Model.has_one = function (has_one) {
 
 			if (app.MODE === 'offline') {
 				selector._parent = this.id;
-				options.online = options.online || !!this.remote;
+				options.online = options.online || (this.remote ? true : null);
 				return model.one(selector, options, callback);
 			} else {
 				if (this._cache[key]) {
@@ -795,7 +795,7 @@ Model.has_many = function (has_many) {
 
 			if (app.MODE === 'offline') {
 				selector._parent = this.id;
-				options.online = options.online || !!this.remote;
+				options.online = options.online || (this.remote ? true : null);
 				return model.all(selector, options, callback);
 			} else {
 				if (this._cache[key]) {
