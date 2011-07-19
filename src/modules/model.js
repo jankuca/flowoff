@@ -996,6 +996,9 @@ Model.api = function (method, uri, params, data, callback) {
 				callback(Model.getStdStatus(this.status), this.responseText ? { 'data': this.responseText } : null, this);
 			}
 			if (json) {
+				if (this.status === 403 && json.dumbass) {
+					window.document.fire('flowoff:dumbass'); // cool event huh?
+				}
 				callback(Model.getStdStatus(this.status), json, this);
 			}
 		}
