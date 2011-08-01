@@ -409,7 +409,7 @@ app = {
 
 	'_dbMigrate': function (last_migration, callback) {
 		if (this._migrations === undefined) {
-			app._boot_error_handler.handle('MIGRATION_FAILED');
+			this._boot_error_handler.handle('MIGRATION_FAILED');
 			throw new Error('No migration file provided');
 		}
 
