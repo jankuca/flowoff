@@ -169,6 +169,11 @@ window.ApiOperation = Operation.inherit({
 	'startup': function (method, uri, data) {
 		var op = this;
 		Model.api(method, uri, {}, data, function (status, response) {
+			var dumbass = (status === 403 && json.dumbass);
+			if (dumbass) {
+				window.document.fire('flowoff:dumbass'); // cool event huh?
+			}
+
 			if ((status && status < 300) || app.MODE !== 'offline') {
 				op.output = [status, response];
 				op.shutdown();
@@ -996,9 +1001,6 @@ Model.api = function (method, uri, params, data, callback) {
 				callback(Model.getStdStatus(this.status), this.responseText ? { 'data': this.responseText } : null, this);
 			}
 			if (json) {
-				if (this.status === 403 && json.dumbass) {
-					window.document.fire('flowoff:dumbass'); // cool event huh?
-				}
 				callback(Model.getStdStatus(this.status), json, this);
 			}
 		}
