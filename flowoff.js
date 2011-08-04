@@ -6,7 +6,7 @@ window.FlowOff = {
 		var _load = function () {
 			require.js(
 				'lib/json/json2.js',
-				'lib/lang.js/lang.js',
+//				'lib/lang.js/lang.js',
 				'lib/ejs/ejs.js',
 				'lib/mongo2sql/mongo2sql.js',
 				'lib/uuid/uuid.js',
