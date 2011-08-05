@@ -169,7 +169,7 @@ window.ApiOperation = Operation.inherit({
 	'startup': function (method, uri, data) {
 		var op = this;
 		Model.api(method, uri, {}, data, function (status, response) {
-			var dumbass = (status === 403 && json.dumbass);
+			var dumbass = (status === 403 && response && response.dumbass);
 			if (dumbass) {
 				window.document.fire('flowoff:dumbass'); // cool event huh?
 			}
