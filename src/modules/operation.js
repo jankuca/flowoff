@@ -24,7 +24,7 @@ var Operation = Function.inherit(function () {
 		if (typeof this._callback === 'function') {
 			this._callback();
 		}
-	},
+	}
 });
 
 
@@ -85,5 +85,5 @@ var OperationQueue = Function.inherit(function (namespace) {
 	},
 	'filter': function () {
 		this.items = Array.prototype.filter.apply(this.items, arguments);
-	},
+	}
 });

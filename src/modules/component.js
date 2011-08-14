@@ -32,7 +32,7 @@ var Component = Function.inherit(function () {
 	Object.defineProperty(this, 'rendered', {
 		get: function () {
 			return (component.element !== null);
-		},
+		}
 	});
 }, {
 	'toString': function () {
@@ -189,7 +189,7 @@ var RootComponent = Component.inherit(function (element) {
 	},
 	'rerender': function () {
 		return Component.prototype.rerender.call(this, 'components');
-	},
+	}
 });
 
 window.Component = Component;

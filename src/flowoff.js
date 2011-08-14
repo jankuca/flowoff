@@ -328,7 +328,7 @@ app = {
 		var lang = this._lang[key];
 		if (params !== undefined) {
 			var ejs = new EJS({
-				'text': lang,
+				'text': lang
 			});
 			lang = ejs.render(params);
 		}
@@ -460,9 +460,9 @@ Object.defineProperties(app, {
 		'value': {
 			'booted': false,
 			'hash': '',
-			'viewReady': false,
+			'viewReady': false
 		},
-		'enumerable': true,
+		'enumerable': true
 	},
 	'namespace': {
 		'get': function () {
@@ -472,10 +472,10 @@ Object.defineProperties(app, {
 			namespace = val;
 			this._queue = new OperationQueue(val);
 			app.fire('queueset');
-		},
+		}
 	},
 	'router': {
-		'value': new Router(),
+		'value': new Router()
 	},
 	'_cfg': {
 		'value': {
@@ -484,17 +484,17 @@ Object.defineProperties(app, {
 			'erase': true,
 			'domain': window.location.hostname,
 			'port': window.location.port
-		},
+		}
 	},
 	'_components': {
-		'value': {},
+		'value': {}
 	},
 	'_lang': {
-		'value': {},
+		'value': {}
 	},
 	'_boot_error_handler': {
-		'value': BootErrorHandler,
-	},
+		'value': BootErrorHandler
+	}
 });
 
 

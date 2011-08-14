@@ -21,12 +21,12 @@ SQLStatement = Function.inherit(function (operation, collection) {
 		'operation': {
 			get: function () {
 				return operation;
-			},
+			}
 		},
 		'collection': {
 			get: function () {
 				return collection;
-			},
+			}
 		},
 		'sort': {
 			get: function () {
@@ -39,7 +39,7 @@ SQLStatement = Function.inherit(function (operation, collection) {
 					_sort = {};
 					_sort[value] = 1;
 				}
-			},
+			}
 		},
 		'data': {
 			get: function () {
@@ -49,7 +49,7 @@ SQLStatement = Function.inherit(function (operation, collection) {
 				if (typeof value === 'object') {
 					_data = value;
 				}
-			},
+			}
 		}
 	});
 });
@@ -153,7 +153,7 @@ Object.defineProperty(SQLStatement.prototype, 'sql', {
 		}
 
 		return [out, params];
-	},
+	}
 });
 
 
@@ -211,7 +211,7 @@ Model = Function.inherit(function (doc) {
 			},
 			set: function (value) {
 				_stored = !!value;
-			},
+			}
 		},
 		'changed': {
 			get: function () {
@@ -219,11 +219,11 @@ Model = Function.inherit(function (doc) {
 			},
 			set: function (value) {
 				_changed = !!value;
-			},
+			}
 		},
 		'doc': {
 			value: doc,
-			writable: false,
+			writable: false
 		},
 		'id': {
 			get: function () {
@@ -241,7 +241,7 @@ Model = Function.inherit(function (doc) {
 						_stored = false;
 					}
 				}
-			},
+			}
 		},
 		'parent': {
 			get: function () {
@@ -260,7 +260,7 @@ Model = Function.inherit(function (doc) {
 					this._cache.parent = (value instanceof Model) ? value : undefined;
 				}
 				_changed = _changed || orig !== doc._parent;
-			},
+			}
 		}
 	});
 
@@ -288,7 +288,7 @@ Model = Function.inherit(function (doc) {
 		Object.defineProperty(this, key, {
 			get: fieldGetter.bind(this, key),
 			set: fieldSetter.bind(this, key),
-			enumerable: true,
+			enumerable: true
 		});
 	}, this);
 
@@ -536,7 +536,7 @@ Model = Function.inherit(function (doc) {
 			throw new Error('Unknown field (' + key + ')');
 		}
 		this[key] = Math.round(new Date().getTime() / 1000);
-	},
+	}
 });
 
 Object.defineProperties(Model.prototype, {
@@ -545,15 +545,15 @@ Object.defineProperties(Model.prototype, {
 			return this.constructor.collection;
 		},
 		set: function () {
-		},
+		}
 	},
 	'key': {
 		get: function () {
 			return this.constructor.collection.replace(/ies$/, 'y').replace(/s$/, '');
 		},
 		set: function () {
-		},
-	},
+		}
+	}
 });
 
 Model.one = function (selector, options, callback) {

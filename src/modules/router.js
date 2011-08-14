@@ -6,12 +6,12 @@ var Router = Function.inherit(function () {
 		},
 		'set': function (ns) {
 			_namespace = (ns === null) ? '' : '/' + ns;
-		},
+		}
 	});
 
 	Object.defineProperties(this, {
 		'PARAM_HEX': { 'value': /^[a-f0-9]+$/i, 'writable': false },
-		'PARAM_INTEGER': { 'value': /^\d+$/, 'writable': false },
+		'PARAM_INTEGER': { 'value': /^\d+$/, 'writable': false }
 	});
 
 	this._routes = [];
@@ -252,5 +252,5 @@ var Router = Function.inherit(function () {
 		});
 
 		return result;
-	},
+	}
 });

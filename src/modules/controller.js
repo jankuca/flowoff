@@ -11,7 +11,7 @@ var Controller = Function.inherit(function (route) {
 		}
 		document.fire('flowoff:callstart', this._route);
 		this[this._route.view](this._route.params);
-	},
+	}
 });
 
 
