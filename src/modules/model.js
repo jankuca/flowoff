@@ -248,7 +248,8 @@ Model = Function.inherit(function (doc) {
 				if (typeof this.getParent !== 'function') {
 					throw new Error('No parent association');
 				}
-				return doc._parent._id || doc._parent || null;
+				var api_field = window[this.constructor.parent_constructor].api_field || 'id';
+				return doc._parent[api_field] || doc._parent || null;
 			},
 			set: function (value) {
 				if (typeof this.getParent !== 'function') {
@@ -865,7 +866,8 @@ Model.belongs_to = function (belongs_to, is_api_parent) {
 		}
 
 		if (app.MODE === 'offline') {
-			selector._id = this.parent;
+			var api_field = window[this.constructor.parent_constructor].api_field;
+			selector[!this.remote ? '_id' : api_field] = this.parent;
 			options.online = options.online || !!this.remote;
 			return model.one(selector, options, callback);
 		} else {
