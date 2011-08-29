@@ -968,7 +968,6 @@ Model.api = function (method, uri, params, data, callback) {
 		xhr = new XMLHttpRequest(),
 		headers = this.headers || {};
 
-	uri = app._cfg.api_root + '/' + uri;
 	uri = uri.replace(new RegExp('./+', 'g'), function (a) {
 		return (a[0] === ':' && a.length > 2) ? '://' : a[0] + '/';
 	});
@@ -1019,7 +1018,7 @@ Model.getStdStatus = function (status) {
 };
 
 Model.getApiUri = function (id, assoc) {
-	var uri = '/' + this.collection.toLowerCase();
+	var uri = app.get('api_root') + '/' + this.collection.toLowerCase();
 	if (id !== undefined) {
 		uri += '/' + id;
 		if (assoc) {
