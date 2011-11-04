@@ -456,8 +456,8 @@ Model = Function.inherit(function (doc) {
 			options = {};
 		}
 
-		if (this.id === null) {
-			throw new Error('Error: Object has no ID');
+		if (!this.stored) {
+			return callback(null);
 		}
 		if (typeof this.beforeDelete === 'function') {
 			this.beforeDelete();
