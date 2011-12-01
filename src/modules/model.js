@@ -231,7 +231,7 @@ Model = Function.inherit(function (doc) {
 			},
 			set: function (value) {
 				if (doc._id !== value) {
-					if (doc._id) {
+					if (doc._id && console && console.warn) {
 						console.warn('Rewriting an UUID');
 					}
 
@@ -433,8 +433,10 @@ Model = Function.inherit(function (doc) {
 					}
 				}
 			}, function (tx, err) {
-				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
-				console.log('The SQL query was:', sql[0], sql[1]);
+				if (console) {
+					console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
+					console.log('The SQL query was:', sql[0], sql[1]);
+				}
 				if (typeof callback === 'function') {
 					callback(err);
 				}
@@ -505,8 +507,10 @@ Model = Function.inherit(function (doc) {
 					app.queue(op);
 				}
 			}, function (tx, err) {
-				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
-				console.log('The SQL query was:', sql[0], sql[1]);
+				if (console) {
+					console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
+					console.log('The SQL query was:', sql[0], sql[1]);
+				}
 				if (typeof callback === 'function') {
 					callback(err);
 				}
@@ -687,8 +691,10 @@ Model.all = function (selector, options, callback) {
 				callback(options.limit !== 1 ? [] : new M());
 			}
 		}, function (tx, err) {
-			console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
-			console.log('The SQL query was:', sql[0], sql[1]);
+			if (console) {
+				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
+				console.log('The SQL query was:', sql[0], sql[1]);
+			}
 			callback(err);
 		});
 	};
@@ -918,8 +924,10 @@ Model.search = function (field, q, options, callback) {
 				callback(options.limit !== 1 ? [] : new M());
 			}
 		}, function (tx, err) {
-			console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
-			console.log('The SQL query was:', sql[0], sql[1]);
+			if (console) {
+				console.error('SQL Error: ' + err.message + '; ' + JSON.stringify(err));
+				console.log('The SQL query was:', sql[0], sql[1]);
+			}
 			callback(err);
 		});
 	};

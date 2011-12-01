@@ -321,7 +321,9 @@ app = {
 	/* LANG */
 	'lang': function (key, params) {
 		if (this._lang[key] === undefined) {
-			console.warn('Unknown lang key: ' + key);
+			if (console && console.warn) {
+				console.warn('Unknown lang key: ' + key);
+			}
 			return '';
 		}
 		

@@ -138,7 +138,9 @@ var Component = Function.inherit(function () {
 			placeholder = this.element.find('*[components="' + key + '"]').first();
 		}
 		if (placeholder === undefined) {
-			console.warn('There is no such component placeholder "' + key + '".');
+			if (console && console.warn) {
+				console.warn('There is no such component placeholder "' + key + '".');
+			}
 			return;
 		}
 
