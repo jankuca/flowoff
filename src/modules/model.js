@@ -618,7 +618,7 @@ Model.all = function (selector, options, callback) {
 		}
 		M.api('GET', uri, function (status, response) {
 			if (status !== 200) {
-				return callback(options.limit !== 1 ? [] : new M());
+				return callback(options.limit !== 1 ? [] : new M(), status);
 			}
 			if (options.limit === 1) {
 				var m = new M(response instanceof Array ? response[0] : response);
@@ -634,7 +634,7 @@ Model.all = function (selector, options, callback) {
 					m.remote = true;
 					models.push(m);
 				});
-				callback(models);
+				callback(models, status);
 			}
 		});
 	};
@@ -683,12 +683,12 @@ Model.all = function (selector, options, callback) {
 					});
 					models.push(new M(doc));
 				}
-				callback(options.limit !== 1 ? models : models[0] || new M());
+				callback(options.limit !== 1 ? models : models[0] || new M(), 0);
 			} else if (M.online !== false) {
 				// fallback to online
 				fallback();
 			} else {
-				callback(options.limit !== 1 ? [] : new M());
+				callback(options.limit !== 1 ? [] : new M(), 0);
 			}
 		}, function (tx, err) {
 			if (console) {
