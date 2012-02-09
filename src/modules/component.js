@@ -3,22 +3,6 @@
 (function () {
 "use strict";
 
-var fn_dynamicLink = function (event) {
-	var href = this.attr('href');
-	if (href[0] === '#') {
-		event.preventDefault();
-		event.stopPropagation();
-		app.call(href);
-	}
-};
-var makeLinksDynamic = function (el) {
-	el.find('a[href]').forEach(function (a) {
-		a.removeEventListener('click', fn_dynamicLink, false);
-		a.addEventListener('click', fn_dynamicLink, false);
-	});
-};
-
-
 var Component = Function.inherit(function () {
 	var component = this;
 
@@ -107,7 +91,6 @@ var Component = Function.inherit(function () {
 		}, this);
 
 		this.element = div.firstChild;
-		makeLinksDynamic(this.element);
 		return this.element;
 	},
 	'rerender': function (key, not_rendered_only) {
