@@ -1015,6 +1015,8 @@ Model.api = function (method, uri, params, data, callback) {
 		}
 	};
 	xhr.send(data_str || null);
+
+	return xhr;
 };
 
 Model.getStdStatus = function (status) {
